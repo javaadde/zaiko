@@ -473,7 +473,7 @@ export default function AddStockScreen() {
             <View style={{ flex: 1 }}>
               <InputField
                 label="Min Wholesale"
-                placeholder="Default: Cost + ₹500"
+                placeholder="₹500"
                 keyboardType="numeric"
                 value={minWholesalePrice}
                 onChangeText={setMinWholesalePrice}
@@ -482,7 +482,7 @@ export default function AddStockScreen() {
             <View style={{ flex: 1 }}>
               <InputField
                 label="Min Retail"
-                placeholder="Default: Cost + ₹1000"
+                placeholder="₹1000"
                 keyboardType="numeric"
                 value={minRetailPrice}
                 onChangeText={setMinRetailPrice}
