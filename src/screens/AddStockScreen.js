@@ -29,6 +29,8 @@ import {
   Plus,
   ImagePlus,
   Check,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react-native";
 import { Audio } from "expo-av";
 
@@ -92,6 +94,7 @@ export default function AddStockScreen() {
   const [existingImageUrl, setExistingImageUrl] = useState(null);
   const [showBrandModal, setShowBrandModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [showPricingRules, setShowPricingRules] = useState(false);
 
   // Load item data if editing
   useEffect(() => {
@@ -118,6 +121,10 @@ export default function AddStockScreen() {
       );
       setMinRetailPrice(item.minRetailPrice ? String(item.minRetailPrice) : "");
       setExistingImageUrl(item.image?.url || null);
+
+      if (item.minWholesalePrice || item.minRetailPrice) {
+        setShowPricingRules(true);
+      }
     } catch (error) {
       Alert.alert("Error", "Failed to load item details");
       router.back();
@@ -465,30 +472,43 @@ export default function AddStockScreen() {
           />
 
           <View style={styles.sectionDivider} />
-          <Text style={styles.sectionLabel}>
-            Custom Pricing Rules (Optional)
-          </Text>
+          <TouchableOpacity
+            style={styles.sectionToggle}
+            onPress={() => setShowPricingRules(!showPricingRules)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.sectionLabel}>
+              Custom Pricing Rules (Optional)
+            </Text>
+            {showPricingRules ? (
+              <ChevronUp size={20} color="#1A1A1A" />
+            ) : (
+              <ChevronDown size={20} color="#1A1A1A" />
+            )}
+          </TouchableOpacity>
 
-          <View style={styles.row}>
-            <View style={{ flex: 1 }}>
-              <InputField
-                label="Min Wholesale"
-                placeholder="₹500"
-                keyboardType="numeric"
-                value={minWholesalePrice}
-                onChangeText={setMinWholesalePrice}
-              />
+          {showPricingRules && (
+            <View style={styles.row}>
+              <View style={{ flex: 1 }}>
+                <InputField
+                  label="Min Wholesale"
+                  placeholder="₹500"
+                  keyboardType="numeric"
+                  value={minWholesalePrice}
+                  onChangeText={setMinWholesalePrice}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <InputField
+                  label="Min Retail"
+                  placeholder="₹1000"
+                  keyboardType="numeric"
+                  value={minRetailPrice}
+                  onChangeText={setMinRetailPrice}
+                />
+              </View>
             </View>
-            <View style={{ flex: 1 }}>
-              <InputField
-                label="Min Retail"
-                placeholder="₹1000"
-                keyboardType="numeric"
-                value={minRetailPrice}
-                onChangeText={setMinRetailPrice}
-              />
-            </View>
-          </View>
+          )}
         </View>
 
         <TouchableOpacity
@@ -783,8 +803,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "800",
     color: "#1A1A1A",
+  },
+  sectionToggle: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 4,
     marginBottom: 5,
-    marginLeft: 4,
   },
   row: {
     flexDirection: "row",

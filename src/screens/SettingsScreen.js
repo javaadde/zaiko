@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { API_BASE_URL } from "../services/api";
 import { useRouter } from "expo-router";
-import { CreditCard, ChevronRight, Archive } from "lucide-react-native";
+import { ChevronRight, Archive } from "lucide-react-native";
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -27,12 +27,12 @@ export default function SettingsScreen() {
       const response = await fetch(`${API_BASE_URL}/health`);
       const end = Date.now();
       if (response.ok) {
-        setServerStatus(`Online (${end - start}ms)`);
+        setServerStatus("Server is Online");
       } else {
-        setServerStatus("Offline (Error)");
+        setServerStatus("Server is Offline");
       }
     } catch (e) {
-      setServerStatus("Offline (No Connection)");
+      setServerStatus("No Connection");
     } finally {
       setLoading(false);
     }
@@ -66,7 +66,7 @@ export default function SettingsScreen() {
           <View style={styles.card}>
             <View style={styles.statusRow}>
               <View style={styles.statusInfo}>
-                <Text style={styles.statusLabel}>Backend Server</Text>
+                <Text style={styles.statusLabel}>Connection Status</Text>
                 <Text style={styles.urlText} numberOfLines={1}>
                   {API_BASE_URL}
                 </Text>
@@ -75,26 +75,16 @@ export default function SettingsScreen() {
                 style={[
                   styles.statusBadge,
                   {
-                    backgroundColor: serverStatus.includes("Online")
-                      ? "#10B981"
-                      : "#EF4444",
+                    backgroundColor:
+                      serverStatus === "Server is Online"
+                        ? "#10B981"
+                        : "#EF4444",
                   },
                 ]}
               >
                 <Text style={styles.badgeText}>{serverStatus}</Text>
               </View>
             </View>
-            <TouchableOpacity
-              style={styles.refreshBtn}
-              onPress={checkConnectivity}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color="#FFF" />
-              ) : (
-                <Text style={styles.refreshText}>Test Connection</Text>
-              )}
-            </TouchableOpacity>
           </View>
         </View>
 
@@ -102,22 +92,6 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>Inventory Management</Text>
           <TouchableOpacity
             style={styles.salesCard}
-            onPress={() => router.push("/(tabs)/history")}
-          >
-            <View style={styles.salesIconBox}>
-              <CreditCard size={24} color="#1A1A1A" />
-            </View>
-            <View style={styles.salesContent}>
-              <Text style={styles.salesTitle}>Sales History</Text>
-              <Text style={styles.salesSub}>
-                View all past sales and customer details
-              </Text>
-            </View>
-            <ChevronRight size={20} color="#999" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.salesCard, { marginTop: 12 }]}
             onPress={() => router.push("/archived-stocks")}
           >
             <View style={[styles.salesIconBox, { backgroundColor: "#EEF2FF" }]}>
@@ -210,8 +184,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
   },
   statusInfo: {
     flex: 1,
@@ -238,19 +210,6 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 11,
     fontWeight: "800",
-  },
-  refreshBtn: {
-    margin: 16,
-    height: 55,
-    backgroundColor: "#1A1A1A",
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  refreshText: {
-    color: "#FFF",
-    fontSize: 15,
-    fontWeight: "700",
   },
   footer: {
     marginTop: 60,
