@@ -31,6 +31,7 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  Smartphone,
 } from "lucide-react-native";
 import { Audio } from "expo-av";
 
@@ -69,6 +70,7 @@ const BRANDS = [
   { name: "Motorola", logo: require("../../assets/logos/motorola.png") },
   { name: "iQOO", logo: require("../../assets/logos/iqoo.png") },
   { name: "Realme", logo: require("../../assets/logos/realme.png") },
+  { name: "Other", logo: null },
 ];
 
 export default function AddStockScreen() {
@@ -92,6 +94,7 @@ export default function AddStockScreen() {
   const [minRetailPrice, setMinRetailPrice] = useState("");
   const [imageUri, setImageUri] = useState(null);
   const [existingImageUrl, setExistingImageUrl] = useState(null);
+  const [otherBrandName, setOtherBrandName] = useState("");
   const [showBrandModal, setShowBrandModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [showPricingRules, setShowPricingRules] = useState(false);
@@ -111,7 +114,17 @@ export default function AddStockScreen() {
       const response = await inventoryAPI.getById(id);
       const item = response.data;
       setModel(item.model);
-      setBrand(item.brand);
+
+      const itemBrand = item.brand;
+      const isPredefined = BRANDS.find((b) => b.name === itemBrand);
+      if (isPredefined && itemBrand !== "Other") {
+        setBrand(itemBrand);
+        setOtherBrandName("");
+      } else {
+        setBrand("Other");
+        setOtherBrandName(itemBrand);
+      }
+
       setPurchasePrice(String(item.purchasePrice));
       setSellingPrice(String(item.sellingPrice));
       setQuantity(String(item.quantity));
@@ -144,6 +157,7 @@ export default function AddStockScreen() {
     setMinRetailPrice("");
     setImageUri(null);
     setExistingImageUrl(null);
+    setOtherBrandName("");
   };
 
   // ========================
@@ -223,7 +237,11 @@ export default function AddStockScreen() {
       return;
     }
     if (!brand.trim()) {
-      Alert.alert("Missing Field", "Please enter the brand.");
+      Alert.alert("Missing Field", "Please select a brand.");
+      return;
+    }
+    if (brand === "Other" && !otherBrandName.trim()) {
+      Alert.alert("Missing Field", "Please specify the brand name.");
       return;
     }
     if (!purchasePrice.trim() || isNaN(Number(purchasePrice))) {
@@ -241,7 +259,7 @@ export default function AddStockScreen() {
     try {
       const itemData = {
         model: model.trim(),
-        brand: brand.trim(),
+        brand: brand === "Other" ? otherBrandName.trim() : brand.trim(),
         purchasePrice: Number(purchasePrice),
         sellingPrice: Number(sellingPrice),
         quantity: Number(quantity) || 1,
@@ -412,12 +430,16 @@ export default function AddStockScreen() {
               <View style={styles.dropdownContent}>
                 {brand ? (
                   <View style={styles.selectedBrandRow}>
-                    {BRANDS.find((b) => b.name === brand) && (
+                    {BRANDS.find((b) => b.name === brand)?.logo ? (
                       <Image
                         source={BRANDS.find((b) => b.name === brand).logo}
                         style={styles.selectedBrandLogo}
                         resizeMode="contain"
                       />
+                    ) : (
+                      <View style={styles.selectedBrandLogoPlaceholder}>
+                        <Smartphone size={18} color="#666" />
+                      </View>
                     )}
                     <Text
                       style={[
@@ -425,7 +447,9 @@ export default function AddStockScreen() {
                         isEditing && { color: "#999" },
                       ]}
                     >
-                      {brand}
+                      {brand === "Other" && otherBrandName
+                        ? otherBrandName
+                        : brand}
                     </Text>
                   </View>
                 ) : (
@@ -435,6 +459,15 @@ export default function AddStockScreen() {
               </View>
             </TouchableOpacity>
           </View>
+
+          {!isEditing && brand === "Other" && (
+            <InputField
+              label="Brand Name"
+              placeholder="Enter mobile brand"
+              value={otherBrandName}
+              onChangeText={setOtherBrandName}
+            />
+          )}
 
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
@@ -575,11 +608,15 @@ export default function AddStockScreen() {
                   }}
                 >
                   <View style={styles.brandIconWrap}>
-                    <Image
-                      source={item.logo}
-                      style={styles.brandIcon}
-                      resizeMode="contain"
-                    />
+                    {item.logo ? (
+                      <Image
+                        source={item.logo}
+                        style={styles.brandIcon}
+                        resizeMode="contain"
+                      />
+                    ) : (
+                      <Smartphone size={22} color="#9CA3AF" strokeWidth={1.5} />
+                    )}
                   </View>
                   <Text
                     style={[
@@ -1024,6 +1061,12 @@ const styles = StyleSheet.create({
   selectedBrandLogo: {
     width: 24,
     height: 24,
+  },
+  selectedBrandLogoPlaceholder: {
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
   },
   selectedBrandText: {
     fontSize: 15,
