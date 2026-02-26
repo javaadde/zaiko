@@ -7,7 +7,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -15,7 +15,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.takeone.mobile"
+      "bundleIdentifier": "com.takeone.mobile",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -37,10 +40,24 @@
         {
           "cameraPermission": "TakeOne needs camera access to take product photos for your inventory."
         }
-      ]
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow TakeOne to access your camera",
+          "microphonePermission": "Allow TakeOne to access your microphone"
+        }
+      ],
+      "expo-av"
     ],
     "experiments": {
       "typedRoutes": false
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "202d45d4-6639-4e0d-bcda-db245aaff5e4"
+      }
     }
   }
 }

@@ -9,18 +9,20 @@
 import { Platform } from "react-native";
 
 const getBaseUrl = () => {
-  // Use the IP address shown in your Metro terminal
-  // This allows physical devices (Expo Go) to connect to your local server
+  // Production URL
+  const PROD_URL = "https://takeone-stocks.onrender.com/api";
+
+  // Use the IP address shown in your Metro terminal for local testing
   const LOCAL_IP = "192.168.43.160";
 
   if (__DEV__) {
     // If you are on an emulator/simulator, localhost/10.0.2.2 still works
     // but using the local IP works for BOTH physical devices and emulators
+    // Set this to PROD_URL if you want to test the live server during development
     return `http://${LOCAL_IP}:5000/api`;
   }
 
-  // Production URL
-  return "http://localhost:5000/api";
+  return PROD_URL;
 };
 
 export const API_BASE_URL = getBaseUrl();
