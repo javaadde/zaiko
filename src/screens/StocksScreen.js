@@ -17,8 +17,8 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, useFocusEffect } from "expo-router";
-import { Search, Filter, Smartphone, PackageOpen } from "lucide-react-native";
-import { Colors, Shadows } from "../theme/colors";
+import { Smartphone, PackageOpen } from "lucide-react-native";
+import { Colors, Shadows, BorderRadius } from "../theme/colors";
 import { inventoryAPI } from "../services/api";
 import StockCard from "../components/StockCard";
 
@@ -64,7 +64,7 @@ function CategoryIcon({ label, icon, active, onPress, isImage, bgColor }) {
         {isImage ? (
           <Image
             source={icon}
-            style={{ width: 45, height: 45, borderRadius: 22.5 }}
+            style={{ width: 45, height: 45, borderRadius: BorderRadius.full }}
             resizeMode="contain"
           />
         ) : React.isValidElement(icon) ? (
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 56,
     backgroundColor: "#F9FAFB",
-    borderRadius: 28,
+    borderRadius: BorderRadius.large,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 18,
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
   filterBtn: {
     width: 56,
     height: 56,
-    borderRadius: 28,
+    borderRadius: BorderRadius.large,
     backgroundColor: "#1A1A1A",
     alignItems: "center",
     justifyContent: "center",
@@ -469,8 +469,8 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: "#FFF",
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
+    borderTopLeftRadius: BorderRadius.xl,
+    borderTopRightRadius: BorderRadius.xl,
     padding: 24,
     minHeight: 350,
   },
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
   filterOption: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 14,
+    borderRadius: BorderRadius.medium,
     backgroundColor: "#F3F4F6",
     borderWidth: 1,
     borderColor: "#F3F4F6",
@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
   catCircle: {
     width: 60,
     height: 60,
-    borderRadius: 30,
+    borderRadius: BorderRadius.full,
     backgroundColor: "#F3F4F6",
     alignItems: "center",
     justifyContent: "center",
@@ -574,7 +574,7 @@ const styles = StyleSheet.create({
   emptyIconBox: {
     width: 100,
     height: 100,
-    borderRadius: 50,
+    borderRadius: BorderRadius.full,
     backgroundColor: "#F9FAFB",
     alignItems: "center",
     justifyContent: "center",

@@ -19,7 +19,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Colors, Shadows } from "../theme/colors";
+import { Colors, Shadows, BorderRadius } from "../theme/colors";
 import { inventoryAPI } from "../services/api";
 import {
   Camera,
@@ -865,7 +865,7 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: "#F3F4F6",
     height: 55,
-    borderRadius: 18,
+    borderRadius: BorderRadius.medium,
     paddingHorizontal: 20,
     fontSize: 15,
     color: "#333",
@@ -877,7 +877,7 @@ const styles = StyleSheet.create({
   },
   imagePickerBox: {
     height: 200,
-    borderRadius: 24,
+    borderRadius: BorderRadius.large,
     overflow: "hidden",
     backgroundColor: "#F3F4F6",
     borderWidth: 2,
@@ -893,7 +893,7 @@ const styles = StyleSheet.create({
   imagePlaceholderIconCircle: {
     width: 70,
     height: 70,
-    borderRadius: 35,
+    borderRadius: BorderRadius.full,
     backgroundColor: "#FFF",
     alignItems: "center",
     justifyContent: "center",
@@ -914,7 +914,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#1A1A1A",
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: BorderRadius.full,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 3,
@@ -957,7 +957,7 @@ const styles = StyleSheet.create({
   // Save Button
   saveBtn: {
     marginTop: 40,
-    borderRadius: 20,
+    borderRadius: BorderRadius.large,
     overflow: "hidden",
   },
   saveGrad: {
@@ -1019,7 +1019,7 @@ const styles = StyleSheet.create({
   successCircle: {
     width: 120,
     height: 120,
-    borderRadius: 60,
+    borderRadius: BorderRadius.full,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 24,
@@ -1044,7 +1044,7 @@ const styles = StyleSheet.create({
   dropdownTrigger: {
     backgroundColor: "#F3F4F6",
     height: 55,
-    borderRadius: 18,
+    borderRadius: BorderRadius.medium,
     paddingHorizontal: 20,
     justifyContent: "center",
   },
@@ -1090,8 +1090,8 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: "#FFF",
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
+    borderTopLeftRadius: BorderRadius.xl,
+    borderTopRightRadius: BorderRadius.xl,
     height: "60%",
     paddingBottom: 40,
   },
@@ -1105,7 +1105,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 5,
     backgroundColor: "#E5E7EB",
-    borderRadius: 3,
+    borderRadius: BorderRadius.small,
     marginBottom: 10,
   },
   modalTitle: {
@@ -1121,7 +1121,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 12,
-    borderRadius: 16,
+    borderRadius: BorderRadius.medium,
     backgroundColor: "#F9FAFB",
     gap: 15,
   },
@@ -1133,7 +1133,7 @@ const styles = StyleSheet.create({
   brandIconWrap: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: BorderRadius.small,
     backgroundColor: "#FFF",
     alignItems: "center",
     justifyContent: "center",
@@ -1169,8 +1169,8 @@ const styles = StyleSheet.create({
   },
   bottomSheetContent: {
     backgroundColor: "#FFF",
-    borderTopLeftRadius: 40,
-    borderTopRightRadius: 40,
+    borderTopLeftRadius: BorderRadius.xl,
+    borderTopRightRadius: BorderRadius.xl,
     paddingHorizontal: 24,
     paddingBottom: Platform.OS === "ios" ? 50 : 30,
     shadowColor: "#000",
@@ -1188,7 +1188,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 5,
     backgroundColor: "#E5E7EB",
-    borderRadius: 10,
+    borderRadius: BorderRadius.small,
     marginBottom: 20,
   },
   sheetTitleRow: {
@@ -1206,7 +1206,7 @@ const styles = StyleSheet.create({
   closeBtn: {
     padding: 8,
     backgroundColor: "#F3F4F6",
-    borderRadius: 20,
+    borderRadius: BorderRadius.large,
   },
   sheetSubtitle: {
     fontSize: 14,
@@ -1224,14 +1224,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     backgroundColor: "#F9FAFB",
-    borderRadius: 24,
+    borderRadius: BorderRadius.large,
     borderWidth: 1,
     borderColor: "#F3F4F6",
   },
   optionIconBox: {
     width: 52,
     height: 52,
-    borderRadius: 18,
+    borderRadius: BorderRadius.medium,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 16,
@@ -1260,7 +1260,7 @@ const styles = StyleSheet.create({
     height: 56,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 20,
+    borderRadius: BorderRadius.large,
     backgroundColor: "#F3F4F6",
   },
   cancelSheetText: {

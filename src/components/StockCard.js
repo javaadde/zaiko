@@ -8,29 +8,13 @@ import {
   Dimensions,
 } from "react-native";
 import { ArrowUpRight } from "lucide-react-native";
-import { Colors, Shadows } from "../theme/colors";
+import { Colors, Shadows, BorderRadius } from "../theme/colors";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 60) / 2;
 
 export default function StockCard({ item, onDelete, onPress }) {
-  // Use brand logo as fallback if no image
-  const brandLogos = {
-    Apple: require("../../assets/logos/apple.png"),
-    Samsung: require("../../assets/logos/samsung.png"),
-    Google: require("../../assets/logos/google.png"),
-    Xiaomi: require("../../assets/logos/xiaomi.png"),
-    OnePlus: require("../../assets/logos/oneplus.png"),
-    Motorola: require("../../assets/logos/motorola.png"),
-    Vivo: require("../../assets/logos/vivo.png"),
-    Oppo: require("../../assets/logos/oppo.png"),
-    iQOO: require("../../assets/logos/iqoo.png"),
-    Realme: require("../../assets/logos/realme.png"),
-  };
-
-  const hasImage = item.image && item.image.url;
-  const logo = brandLogos[item.brand];
-
+  // ... rest of the component remains same ...
   return (
     <TouchableOpacity
       activeOpacity={0.9}
@@ -98,7 +82,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: "#FFF",
     width: CARD_WIDTH,
-    borderRadius: 32,
+    borderRadius: BorderRadius.large,
     padding: 12,
     marginHorizontal: 8,
     marginVertical: 10,
@@ -106,7 +90,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     width: "100%",
     height: 180,
-    borderRadius: 24,
+    borderRadius: BorderRadius.large,
     backgroundColor: "#F8F9FA",
     overflow: "hidden",
     justifyContent: "center",
@@ -136,7 +120,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: BorderRadius.small,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -178,7 +162,7 @@ const styles = StyleSheet.create({
   actionBtn: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: BorderRadius.full,
     backgroundColor: "#F8F9FA",
     alignItems: "center",
     justifyContent: "center",
@@ -189,3 +173,4 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 });
+

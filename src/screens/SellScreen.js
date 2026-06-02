@@ -24,7 +24,7 @@ import {
 } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { Shadows } from "../theme/colors";
+import { Shadows, BorderRadius } from "../theme/colors";
 import { inventoryAPI } from "../services/api";
 
 export default function SellScreen() {

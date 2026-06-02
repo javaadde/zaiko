@@ -29,7 +29,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { CameraView, Camera } from "expo-camera";
-import { Shadows } from "../theme/colors";
+import { Shadows, BorderRadius } from "../theme/colors";
 import { inventoryAPI } from "../services/api";
 import { Audio } from "expo-av";
 
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
   backBtn: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: BorderRadius.full,
     borderWidth: 1,
     borderColor: "#E2E8F0",
     alignItems: "center",
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
   },
   stepCard: {
     backgroundColor: "#FFF",
-    borderRadius: 24,
+    borderRadius: BorderRadius.large,
     padding: 20,
     marginBottom: 32,
     borderWidth: 1,
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: "#FFF",
     height: 56,
-    borderRadius: 16,
+    borderRadius: BorderRadius.medium,
     paddingHorizontal: 16,
     fontSize: 16,
     fontWeight: "600",
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
   scanBtn: {
     width: 56,
     height: 56,
-    borderRadius: 12,
+    borderRadius: BorderRadius.medium,
     backgroundColor: "#0F172A",
     alignItems: "center",
     justifyContent: "center",
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
   photoBox: {
     width: "100%",
     height: 180,
-    borderRadius: 20,
+    borderRadius: BorderRadius.large,
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
     borderColor: "#E2E8F0",
@@ -478,7 +478,7 @@ const styles = StyleSheet.create({
   photoIconCircle: {
     width: 54,
     height: 54,
-    borderRadius: 27,
+    borderRadius: BorderRadius.full,
     backgroundColor: "#F1F5F9",
     alignItems: "center",
     justifyContent: "center",
@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
   },
   finalizeBtn: {
     height: 68,
-    borderRadius: 22,
+    borderRadius: BorderRadius.large,
     backgroundColor: "#0F172A",
     alignItems: "center",
     justifyContent: "center",
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
     height: 180,
     borderWidth: 2,
     borderColor: "#10B981",
-    borderRadius: 24,
+    borderRadius: BorderRadius.large,
   },
   scannerText: {
     color: "#FFF",
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
   captureBtn: {
     width: 80,
     height: 80,
-    borderRadius: 40,
+    borderRadius: BorderRadius.full,
     backgroundColor: "rgba(255,255,255,0.3)",
     alignItems: "center",
     justifyContent: "center",
@@ -569,7 +569,7 @@ const styles = StyleSheet.create({
   captureInner: {
     width: 64,
     height: 64,
-    borderRadius: 32,
+    borderRadius: BorderRadius.full,
     backgroundColor: "#FFF",
   },
   closeOverlay: {
@@ -578,7 +578,7 @@ const styles = StyleSheet.create({
     right: 30,
     padding: 10,
     backgroundColor: "rgba(0,0,0,0.5)",
-    borderRadius: 20,
+    borderRadius: BorderRadius.large,
   },
   // Success State Styles
   successWrapper: {
@@ -592,14 +592,14 @@ const styles = StyleSheet.create({
   successCard: {
     backgroundColor: "#FFF",
     width: "100%",
-    borderRadius: 32,
+    borderRadius: BorderRadius.xl,
     padding: 32,
     alignItems: "center",
   },
   successIconBox: {
     width: 80,
     height: 80,
-    borderRadius: 24,
+    borderRadius: BorderRadius.large,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 24,
@@ -621,7 +621,7 @@ const styles = StyleSheet.create({
   successStats: {
     flexDirection: "row",
     backgroundColor: "#F8FAFC",
-    borderRadius: 24,
+    borderRadius: BorderRadius.large,
     padding: 20,
     marginBottom: 32,
     width: "100%",
@@ -652,7 +652,7 @@ const styles = StyleSheet.create({
   },
   successBtn: {
     height: 64,
-    borderRadius: 20,
+    borderRadius: BorderRadius.large,
     alignItems: "center",
     justifyContent: "center",
   },

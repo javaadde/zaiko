@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
-import { Colors, Shadows } from "../theme/colors";
+import { Colors, Shadows, BorderRadius } from "../theme/colors";
 import { inventoryAPI } from "../services/api";
 import {
   TrendingUp,
@@ -338,14 +338,14 @@ const styles = StyleSheet.create({
   kpiCard: {
     flex: 1,
     backgroundColor: "#FFF",
-    borderRadius: 24,
+    borderRadius: BorderRadius.large,
     padding: 18,
     gap: 4,
   },
   kpiIconBox: {
     width: 36,
     height: 36,
-    borderRadius: 12,
+    borderRadius: BorderRadius.medium,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 6,
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
 
   graphCard: {
     backgroundColor: "#FFF",
-    borderRadius: 28,
+    borderRadius: BorderRadius.large,
     padding: 20,
     marginBottom: 20,
   },
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F3F4F6",
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: BorderRadius.small,
   },
   badgeText: { fontSize: 10, fontWeight: "800", color: "#6B7280" },
 
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: BorderRadius.full,
     borderWidth: 2,
   },
   lgLabels: {
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
   miniInsight: {
     flex: 1,
     backgroundColor: "#FFF",
-    borderRadius: 24,
+    borderRadius: BorderRadius.large,
     padding: 15,
     flexDirection: "row",
     alignItems: "center",
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
   miniIconBox: {
     width: 32,
     height: 32,
-    borderRadius: 10,
+    borderRadius: BorderRadius.medium,
     backgroundColor: "#F3F4F6",
     alignItems: "center",
     justifyContent: "center",
@@ -410,14 +410,14 @@ const styles = StyleSheet.create({
   miniTitle: { fontSize: 11, color: "#9CA3AF", fontWeight: "600", flex: 1 },
   miniVal: { fontSize: 14, fontWeight: "800", color: "#1A1A1A" },
 
-  movCard: { backgroundColor: "#FFF", borderRadius: 28, padding: 20 },
+  movCard: { backgroundColor: "#FFF", borderRadius: BorderRadius.large, padding: 20 },
   movList: { marginTop: 20, gap: 15 },
   movRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   rowLead: { flexDirection: "row", alignItems: "center", gap: 10, width: 90 },
   rowIcon: {
     width: 28,
     height: 28,
-    borderRadius: 8,
+    borderRadius: BorderRadius.small,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -426,10 +426,10 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 6,
     backgroundColor: "#F3F4F6",
-    borderRadius: 3,
+    borderRadius: BorderRadius.small,
     overflow: "hidden",
   },
-  barFill: { height: "100%", borderRadius: 3 },
+  barFill: { height: "100%", borderRadius: BorderRadius.small },
   rowVal: {
     fontSize: 13,
     fontWeight: "700",

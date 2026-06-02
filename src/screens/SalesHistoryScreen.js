@@ -27,7 +27,7 @@ import {
   CreditCard,
 } from "lucide-react-native";
 import { salesAPI } from "../services/api";
-import { Colors, Shadows } from "../theme/colors";
+import { Colors, Shadows, BorderRadius } from "../theme/colors";
 import { useRouter } from "expo-router";
 
 const { width } = Dimensions.get("window");
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
   backBtn: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: BorderRadius.full,
     backgroundColor: "#F3F4F6",
     alignItems: "center",
     justifyContent: "center",
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F3F4F6",
-    borderRadius: 16,
+    borderRadius: BorderRadius.medium,
     paddingHorizontal: 12,
     height: 50,
     marginBottom: 16,
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: BorderRadius.large,
     backgroundColor: "#F3F4F6",
     gap: 4,
   },
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   },
   saleCard: {
     backgroundColor: "#FFF",
-    borderRadius: 24,
+    borderRadius: BorderRadius.large,
     padding: 20,
     marginBottom: 16,
   },
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F3F4F6",
     paddingHorizontal: 12,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: BorderRadius.small,
   },
   brandText: {
     fontSize: 12,
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
   customerAvatar: {
     width: 80,
     height: 80,
-    borderRadius: 16,
+    borderRadius: BorderRadius.medium,
     backgroundColor: "#F3F4F6",
     marginLeft: 15,
   },
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF9F0",
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: BorderRadius.small,
     alignSelf: "flex-start",
   },
   imeiLabel: {
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
   typeBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 10,
+    borderRadius: BorderRadius.small,
   },
   typeText: {
     fontSize: 11,

@@ -6,6 +6,7 @@ import {
   Platform,
   Dimensions,
 } from "react-native";
+import { BlurView } from "expo-blur";
 import { Tabs } from "expo-router";
 import {
   LayoutDashboard,
@@ -20,6 +21,7 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import SwipeWrapper from "../../src/components/SwipeWrapper";
+import { BorderRadius } from "../../src/theme/colors";
 
 const { width } = Dimensions.get("window");
 const TAB_BAR_HORIZONTAL_MARGIN = 20;
@@ -67,6 +69,12 @@ function MyTabBar({ state, descriptors, navigation }) {
   return (
     <View style={styles.tabBarContainer}>
       <View style={styles.tabBar}>
+        <BlurView
+          intensity={32}
+          tint="light"
+          experimentalBlurMethod="dimezisBlurView"
+          style={styles.tabBarBlur}
+        />
         <Animated.View style={[styles.fluidSlider, animatedSliderStyle]} />
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
@@ -183,16 +191,20 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     height: 70,
-    borderRadius: 35,
-    backgroundColor: "#FFFFFF",
+    borderRadius: BorderRadius.full,
+    backgroundColor: "rgba(255,255,255,0.72)",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
     elevation: 25,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.1,
     shadowRadius: 15,
+  },
+  tabBarBlur: {
+    ...StyleSheet.absoluteFillObject,
   },
   tabItem: {
     flex: 1,
@@ -205,7 +217,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: 52,
     height: 52,
-    borderRadius: 26,
+    borderRadius: BorderRadius.full,
     backgroundColor: "#1E272E",
     left: (TAB_WIDTH - 52) / 2,
     zIndex: 1,

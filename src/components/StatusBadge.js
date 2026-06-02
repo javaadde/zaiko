@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { Colors } from "../theme/colors";
+import { Colors, BorderRadius } from "../theme/colors";
 
 export default function StatusBadge({ status }) {
   const config = {
@@ -39,13 +39,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 20,
+    borderRadius: BorderRadius.full,
     gap: 5,
   },
   dot: {
     width: 6,
     height: 6,
-    borderRadius: 3,
+    borderRadius: BorderRadius.full,
   },
   label: {
     fontSize: 11,

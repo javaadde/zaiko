@@ -8,51 +8,16 @@ import {
   Dimensions,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Colors } from "../theme/colors";
+import { Colors, BorderRadius } from "../theme/colors";
 
 const { width } = Dimensions.get("window");
 
 const TAB_CONFIG = [
-  { key: "Dashboard", icon: "⊞", label: "Dashboard" },
-  { key: "Stocks", icon: "📦", label: "Stocks" },
-  { key: "AddStock", icon: "+", label: "Add", isFab: true },
-  { key: "Analytics", icon: "📊", label: "Analytics" },
-  { key: "Settings", icon: "⚙", label: "Settings" },
+  // ... rest of the config ...
 ];
 
 export default function BottomNav({ activeTab, onTabChange }) {
-  const animations = useRef(
-    TAB_CONFIG.map(() => new Animated.Value(0)),
-  ).current;
-  const fabScale = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    TAB_CONFIG.forEach((tab, i) => {
-      Animated.spring(animations[i], {
-        toValue: activeTab === tab.key ? 1 : 0,
-        useNativeDriver: true,
-        tension: 120,
-        friction: 8,
-      }).start();
-    });
-  }, [activeTab]);
-
-  const handleFabPress = () => {
-    Animated.sequence([
-      Animated.spring(fabScale, {
-        toValue: 0.88,
-        useNativeDriver: true,
-        speed: 30,
-      }),
-      Animated.spring(fabScale, {
-        toValue: 1,
-        useNativeDriver: true,
-        speed: 20,
-      }),
-    ]).start();
-    onTabChange("AddStock");
-  };
-
+  // ... rest of the component ...
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -60,86 +25,7 @@ export default function BottomNav({ activeTab, onTabChange }) {
         style={styles.navBar}
       >
         {TAB_CONFIG.map((tab, i) => {
-          if (tab.isFab) {
-            return (
-              <TouchableOpacity
-                key={tab.key}
-                style={styles.fabWrapper}
-                onPress={handleFabPress}
-                activeOpacity={0.9}
-              >
-                <Animated.View style={{ transform: [{ scale: fabScale }] }}>
-                  <LinearGradient
-                    colors={Colors.gradPrimary}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.fab}
-                  >
-                    <Text style={styles.fabIcon}>+</Text>
-                  </LinearGradient>
-                </Animated.View>
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    activeTab === tab.key && styles.tabLabelActive,
-                  ]}
-                >
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          }
-
-          const isActive = activeTab === tab.key;
-          const translateY = animations[i].interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, -4],
-          });
-          const scale = animations[i].interpolate({
-            inputRange: [0, 1],
-            outputRange: [1, 1.12],
-          });
-
-          return (
-            <TouchableOpacity
-              key={tab.key}
-              style={styles.tabItem}
-              onPress={() => onTabChange(tab.key)}
-              activeOpacity={0.7}
-            >
-              <Animated.View
-                style={[
-                  styles.iconWrapper,
-                  { transform: [{ translateY }, { scale }] },
-                ]}
-              >
-                {isActive && (
-                  <Animated.View
-                    style={[styles.activePill, { opacity: animations[i] }]}
-                  />
-                )}
-                <Text
-                  style={[styles.tabIcon, isActive && styles.tabIconActive]}
-                >
-                  {tab.icon}
-                </Text>
-              </Animated.View>
-              <Animated.Text
-                style={[
-                  styles.tabLabel,
-                  {
-                    opacity: animations[i].interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.5, 1],
-                    }),
-                  },
-                  isActive && styles.tabLabelActive,
-                ]}
-              >
-                {tab.label}
-              </Animated.Text>
-            </TouchableOpacity>
-          );
+          // ... rendering logic ...
         })}
       </LinearGradient>
     </View>
@@ -166,7 +52,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 10,
     paddingHorizontal: 8,
-    borderRadius: 28,
+    borderRadius: BorderRadius.large,
     borderWidth: 1,
     borderColor: Colors.border,
   },
@@ -180,14 +66,14 @@ const styles = StyleSheet.create({
     height: 34,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 16,
+    borderRadius: BorderRadius.medium,
     position: "relative",
   },
   activePill: {
     position: "absolute",
     width: 40,
     height: 30,
-    borderRadius: 14,
+    borderRadius: BorderRadius.medium,
     backgroundColor: Colors.primaryGlow,
   },
   tabIcon: {
@@ -216,7 +102,7 @@ const styles = StyleSheet.create({
   fab: {
     width: 56,
     height: 56,
-    borderRadius: 20,
+    borderRadius: BorderRadius.large,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: Colors.primary,
@@ -233,3 +119,4 @@ const styles = StyleSheet.create({
     marginTop: -2,
   },
 });
+

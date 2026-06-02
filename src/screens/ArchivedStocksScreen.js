@@ -25,7 +25,7 @@ import {
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { inventoryAPI } from "../services/api";
-import { Shadows } from "../theme/colors";
+import { Shadows, BorderRadius } from "../theme/colors";
 
 export default function ArchivedStocksScreen() {
   const router = useRouter();
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
   backBtn: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: BorderRadius.full,
     backgroundColor: "#F9FAFB",
     alignItems: "center",
     justifyContent: "center",
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
   emptyIconBox: {
     width: 100,
     height: 100,
-    borderRadius: 50,
+    borderRadius: BorderRadius.full,
     backgroundColor: "#FFF",
     alignItems: "center",
     justifyContent: "center",
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   },
   itemCard: {
     backgroundColor: "#FFF",
-    borderRadius: 24,
+    borderRadius: BorderRadius.large,
     padding: 16,
     borderWidth: 1,
     borderColor: "#F3F4F6",
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
   imageBox: {
     width: 70,
     height: 70,
-    borderRadius: 16,
+    borderRadius: BorderRadius.medium,
     backgroundColor: "#F9FAFB",
     alignItems: "center",
     justifyContent: "center",
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     height: 48,
-    borderRadius: 14,
+    borderRadius: BorderRadius.medium,
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
   },
   restockDialog: {
     backgroundColor: "#FFF",
-    borderRadius: 28,
+    borderRadius: BorderRadius.large,
     padding: 24,
   },
   dialogHeader: {
@@ -452,7 +452,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F9FAFB",
     paddingVertical: 12,
     alignItems: "center",
-    borderRadius: 12,
+    borderRadius: BorderRadius.medium,
     borderWidth: 1,
     borderColor: "#F3F4F6",
     marginVertical: 5,
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
   restockInput: {
     backgroundColor: "#F9FAFB",
     height: 60,
-    borderRadius: 18,
+    borderRadius: BorderRadius.medium,
     paddingHorizontal: 20,
     fontSize: 18,
     fontWeight: "700",
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
   },
   dialogBtn: {
     marginTop: 10,
-    borderRadius: 18,
+    borderRadius: BorderRadius.medium,
     overflow: "hidden",
   },
   dialogBtnGrad: {

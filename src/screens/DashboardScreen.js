@@ -21,7 +21,7 @@ import {
   TrendingUp,
   ArrowRight,
 } from "lucide-react-native";
-import { Colors, Shadows } from "../theme/colors";
+import { Colors, Shadows, BorderRadius } from "../theme/colors";
 import { inventoryAPI } from "../services/api";
 
 const { width } = Dimensions.get("window");
@@ -58,61 +58,6 @@ const getBrandLogo = (brandName) => {
   return null;
 };
 
-function StatCard({
-  value,
-  label,
-  icon,
-  color,
-  subValue,
-  fullWidth,
-  isImage,
-  iconWidth = 40,
-  iconHeight = 40,
-}) {
-  const boxSize = Math.max(iconWidth, iconHeight) * 1.5;
-
-  return (
-    <View
-      style={[
-        styles.statCard,
-        fullWidth && { width: width - 40 },
-        Shadows.card,
-      ]}
-    >
-      <LinearGradient colors={["#FFF", "#F9FAFB"]} style={styles.statGrad}>
-        <View
-          style={[
-            styles.iconBox,
-            { backgroundColor: isImage ? "#FFF" : color + "15" },
-            isImage && {
-              width: boxSize,
-              height: boxSize,
-              borderRadius: boxSize / 4,
-            },
-          ]}
-        >
-          {isImage ? (
-            <Image
-              source={icon}
-              style={{ width: iconWidth, height: iconHeight }}
-              resizeMode="contain"
-            />
-          ) : typeof icon === "string" ? (
-            <Text style={[styles.statIcon, { color }]}>{icon}</Text>
-          ) : (
-            icon
-          )}
-        </View>
-        <View style={styles.statContent}>
-          <Text style={styles.statLabel}>{label}</Text>
-          <Text style={styles.statValue}>{value}</Text>
-          {subValue && <Text style={styles.subValue}>{subValue}</Text>}
-        </View>
-      </LinearGradient>
-    </View>
-  );
-}
-
 export default function DashboardScreen({ onTabChange }) {
   const headerAnim = useRef(new Animated.Value(-10)).current;
   const headerOpacity = useRef(new Animated.Value(0)).current;
@@ -120,8 +65,14 @@ export default function DashboardScreen({ onTabChange }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [greeting, setGreeting] = useState("Welcome back");
 
   useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting("Good Morning");
+    else if (hour < 17) setGreeting("Good Afternoon");
+    else setGreeting("Good Evening");
+
     Animated.parallel([
       Animated.spring(headerAnim, {
         toValue: 0,
@@ -136,10 +87,6 @@ export default function DashboardScreen({ onTabChange }) {
       }),
     ]).start();
   }, []);
-
-  // ========================
-  // Fetch stats from API
-  // ========================
 
   const fetchStats = useCallback(async () => {
     try {
@@ -162,21 +109,14 @@ export default function DashboardScreen({ onTabChange }) {
     fetchStats();
   }, [fetchStats]);
 
-  // ========================
-  // Extract data from stats
-  // ========================
-
-  // Derived stats with fallbacks
   const totalStock = stats?.totalQuantity || 0;
   const activeBrands = stats?.brandDistribution?.length || 0;
   const bestSeller = stats?.bestSelling?.model || "N/A";
   const potentialProfit = stats?.potentialProfit || 0;
 
-  // Get Top 4 Brands by Quantity
   const topBrands = Array.isArray(stats?.brandDistribution)
     ? [...stats.brandDistribution]
         .sort((a, b) => (b.totalQuantity || 0) - (a.totalQuantity || 0))
-        .slice(0, 4)
     : [];
 
   return (
@@ -190,120 +130,157 @@ export default function DashboardScreen({ onTabChange }) {
         }
       >
         <Animated.View
-          style={{
-            opacity: headerOpacity,
-            transform: [{ translateY: headerAnim }],
-          }}
+          style={[
+            styles.header,
+            {
+              opacity: headerOpacity,
+              transform: [{ translateY: headerAnim }],
+            },
+          ]}
         >
-          <View style={styles.header}>
-            <Text style={styles.welcome}>Welcome back,</Text>
+          <View>
+            <Text style={styles.welcome}>{greeting},</Text>
             <Text style={styles.title}>
-              <Text style={styles.bold}>Dashboard</Text> Overview.
+              <Text style={styles.bold}>Inventory</Text> Overview
             </Text>
           </View>
+          <TouchableOpacity
+            style={styles.profileBadge}
+            onPress={() => onTabChange("Settings")}
+          >
+            <View style={styles.profilePlaceholder}>
+              <Text style={styles.profileText}>JD</Text>
+            </View>
+          </TouchableOpacity>
         </Animated.View>
 
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#1A1A1A" />
-            <Text style={styles.loadingText}>Loading dashboard...</Text>
+            <ActivityIndicator size="large" color={Colors.primary} />
+            <Text style={styles.loadingText}>Analyzing Inventory...</Text>
           </View>
         ) : (
-          <View style={styles.statsGrid}>
-            {/* Best Seller Unit */}
-            <StatCard
-              label="Best Seller Phone"
-              value={bestSeller}
-              icon={<Trophy size={20} color="#F59E0B" />}
-              color="#F59E0B"
-              subValue="Highest quantity in stock"
-              fullWidth={true}
-            />
-
-            {/* Core Stats */}
-            <View style={styles.row}>
-              <StatCard
-                label="Total Stock"
-                value={totalStock}
-                icon={<Package size={20} color="#3B82F6" />}
-                color="#3B82F6"
-                subValue="Units across all brands"
-              />
-              <StatCard
-                label="Active Brands"
-                value={activeBrands}
-                icon={<Building2 size={20} color="#8B5CF6" />}
-                color="#8B5CF6"
-                subValue="Registered suppliers"
-              />
+          <View style={styles.content}>
+            {/* High-Level Stats */}
+            <View style={styles.mainStatsRow}>
+              <View style={[styles.mainStat, Shadows.card]}>
+                <Package size={24} color={Colors.primary} />
+                <Text style={styles.mainStatValue}>{totalStock}</Text>
+                <Text style={styles.mainStatLabel}>Total Stock</Text>
+              </View>
+              <View style={[styles.mainStat, Shadows.card]}>
+                <Building2 size={24} color={Colors.primary} />
+                <Text style={styles.mainStatValue}>{activeBrands}</Text>
+                <Text style={styles.mainStatLabel}>Brands</Text>
+              </View>
+              <View style={[styles.mainStat, Shadows.card]}>
+                <TrendingUp size={24} color={Colors.primary} />
+                <Text style={[styles.mainStatValue, { color: Colors.success }]}>
+                  ₹{(potentialProfit / 1000).toFixed(1)}k
+                </Text>
+                <Text style={styles.mainStatLabel}>Est. Profit</Text>
+              </View>
             </View>
 
+            {/* Featured Best Seller */}
+            <TouchableOpacity
+              style={[styles.featuredCard, Shadows.card]}
+              activeOpacity={0.9}
+              onPress={() => onTabChange("Stocks")}
+            >
+              <LinearGradient
+                colors={[Colors.primary, "#333"]}
+                style={styles.featuredGrad}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <View style={styles.featuredContent}>
+                  <View style={styles.featuredTag}>
+                    <Trophy size={14} color="#FFF" />
+                    <Text style={styles.featuredTagText}>BEST SELLER</Text>
+                  </View>
+                  <Text style={styles.featuredTitle}>{bestSeller}</Text>
+                  <Text style={styles.featuredSub}>
+                    Most demanded unit in current inventory
+                  </Text>
+                </View>
+                <Zap size={60} color="rgba(255,255,255,0.1)" style={styles.featuredIcon} />
+              </LinearGradient>
+            </TouchableOpacity>
+
+            {/* Brand Distribution */}
             {topBrands.length > 0 && (
-              <>
-                <Text style={styles.sectionTitle}>Brand Distribution</Text>
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Brand Distribution</Text>
+                  <TouchableOpacity onPress={() => onTabChange("Stocks")}>
+                    <Text style={styles.viewAll}>View All</Text>
+                  </TouchableOpacity>
+                </View>
 
-                {/* Render top brands in pairs */}
-                {[0, 2].map((startIndex) => {
-                  const pair = topBrands.slice(startIndex, startIndex + 2);
-                  if (pair.length === 0) return null;
-
-                  return (
-                    <View key={`brand-row-${startIndex}`} style={styles.row}>
-                      {pair.map((brand) => {
-                        const logo = getBrandLogo(brand._id);
-                        return (
-                          <StatCard
-                            key={brand._id}
-                            // label={brand._id}
-                            value={brand.totalQuantity}
-                            icon={logo || <Package size={40} color="#6B7280" />}
-                            isImage={!!logo}
-                            iconWidth={60}
-                            iconHeight={60}
-                            color={logo ? "#111827" : "#6B7280"}
-                            subValue="Units in stock"
-                          />
-                        );
-                      })}
-                      {/* If only one brand in row, add an empty placeholder to maintain grid */}
-                      {pair.length === 1 && <View style={styles.statCard} />}
-                    </View>
-                  );
-                })}
-              </>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.brandScroll}
+                >
+                  {topBrands.map((brand) => {
+                    const logo = getBrandLogo(brand._id);
+                    return (
+                      <View
+                        key={brand._id}
+                        style={[styles.brandCard, Shadows.card]}
+                      >
+                        <View style={styles.brandLogoBox}>
+                          {logo ? (
+                            <Image
+                              source={logo}
+                              style={styles.brandLogo}
+                              resizeMode="contain"
+                            />
+                          ) : (
+                            <Package size={24} color={Colors.primary} />
+                          )}
+                        </View>
+                        <Text style={styles.brandName} numberOfLines={1}>
+                          {brand._id}
+                        </Text>
+                        <Text style={styles.brandCount}>
+                          {brand.totalQuantity} Units
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </ScrollView>
+              </View>
             )}
 
-            {/* Potential Profit Card */}
-            {potentialProfit > 0 && (
-              <StatCard
-                label="Potential Profit"
-                value={`₹${(potentialProfit / 1000).toFixed(1)}k`}
-                icon={<TrendingUp size={20} color="#10B981" />}
-                color="#10B981"
-                subValue="Selling - Purchase value"
-                fullWidth={true}
-              />
-            )}
+            {/* Action Cards */}
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                style={[styles.smallActionCard, { backgroundColor: "#FFF" }, Shadows.card]}
+                onPress={() => onTabChange("AddStock")}
+              >
+                <View style={styles.actionIconBox}>
+                  <Package size={20} color={Colors.primary} />
+                </View>
+                <Text style={styles.actionLabel}>Add New Stock</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.smallActionCard, { backgroundColor: "#FFF" }, Shadows.card]}
+                onPress={() => onTabChange("History")}
+              >
+                <View style={styles.actionIconBox}>
+                  <TrendingUp size={20} color={Colors.primary} />
+                </View>
+                <Text style={styles.actionLabel}>Sales History</Text>
+              </TouchableOpacity>
+            </View>
+
           </View>
         )}
 
-        <TouchableOpacity
-          style={styles.actionCard}
-          onPress={() => onTabChange("Stocks")}
-        >
-          <LinearGradient
-            colors={["#1A1A1A", "#333"]}
-            style={styles.actionGrad}
-          >
-            <View>
-              <Text style={styles.actionTitle}>View Full Inventory</Text>
-              <Text style={styles.actionSub}>Check status and edit items</Text>
-            </View>
-            <ArrowRight size={24} color="#FFF" strokeWidth={1.5} />
-          </LinearGradient>
-        </TouchableOpacity>
-
-        <View style={{ height: 120 }} />
+        <View style={{ height: 100 }} />
       </ScrollView>
     </View>
   );
@@ -319,117 +296,206 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    marginBottom: 30,
+    marginBottom: 25,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   welcome: {
-    fontSize: 16,
-    color: "#6B7280",
+    fontSize: 14,
+    color: Colors.textSecondary,
     fontWeight: "500",
+    letterSpacing: 0.5,
   },
   title: {
-    fontSize: 28,
-    color: "#111827",
+    fontSize: 24,
+    color: Colors.textPrimary,
     fontWeight: "300",
-    marginTop: 4,
+    marginTop: 2,
   },
   bold: { fontWeight: "700" },
+  profileBadge: {
+    width: 45,
+    height: 45,
+    borderRadius: BorderRadius.full,
+    backgroundColor: "#FFF",
+    padding: 3,
+    ...Shadows.card,
+  },
+  profilePlaceholder: {
+    flex: 1,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileText: {
+    color: "#FFF",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  content: {
+    paddingHorizontal: 20,
+    gap: 25,
+  },
+  loadingContainer: {
+    paddingVertical: 100,
+    alignItems: "center",
+    gap: 15,
+  },
+  loadingText: {
+    fontSize: 15,
+    color: Colors.textMuted,
+    fontWeight: "500",
+  },
+  // Main Stats
+  mainStatsRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  mainStat: {
+    flex: 1,
+    backgroundColor: "#FFF",
+    borderRadius: BorderRadius.large,
+    padding: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  mainStatValue: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: Colors.textPrimary,
+  },
+  mainStatLabel: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  // Featured Card
+  featuredCard: {
+    borderRadius: BorderRadius.large,
+    overflow: "hidden",
+  },
+  featuredGrad: {
+    padding: 25,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  featuredContent: {
+    flex: 1,
+    gap: 10,
+  },
+  featuredTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.small,
+    gap: 6,
+  },
+  featuredTagText: {
+    color: "#FFF",
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 1,
+  },
+  featuredTitle: {
+    color: "#FFF",
+    fontSize: 22,
+    fontWeight: "700",
+  },
+  featuredSub: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  featuredIcon: {
+    position: "absolute",
+    right: -10,
+    bottom: -10,
+  },
+  // Sections
+  section: {
+    gap: 15,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
-    marginHorizontal: 20,
-    marginTop: 20,
-    marginBottom: 15,
+    color: Colors.textPrimary,
   },
-  // Loading
-  loadingContainer: {
-    paddingVertical: 80,
+  viewAll: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    fontWeight: "600",
+  },
+  brandScroll: {
+    paddingRight: 20,
+    gap: 12,
+  },
+  brandCard: {
+    width: 130,
+    backgroundColor: "#FFF",
+    borderRadius: BorderRadius.large,
+    padding: 15,
+    alignItems: "center",
+    gap: 10,
+  },
+  brandLogoBox: {
+    width: 60,
+    height: 60,
+    borderRadius: BorderRadius.medium,
+    backgroundColor: Colors.bg,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 10,
+  },
+  brandLogo: {
+    width: "100%",
+    height: "100%",
+  },
+  brandName: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+  },
+  brandCount: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontWeight: "500",
+  },
+  // Action Cards
+  actionRow: {
+    flexDirection: "row",
+    gap: 15,
+  },
+  smallActionCard: {
+    flex: 1,
+    borderRadius: BorderRadius.large,
+    padding: 20,
     alignItems: "center",
     gap: 12,
   },
-  loadingText: {
-    fontSize: 14,
-    color: "#999",
-    fontWeight: "500",
-  },
-  statsGrid: {
-    paddingHorizontal: 20,
-    gap: 15,
-  },
-  row: {
-    flexDirection: "row",
-    gap: 15,
-  },
-  statCard: {
-    width: (width - 55) / 2,
-    borderRadius: 24,
-    backgroundColor: "#FFF",
-    overflow: "hidden",
-  },
-  statGrad: {
-    padding: 20,
-    minHeight: 140,
-    justifyContent: "space-between",
-  },
-  iconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+  actionIconBox: {
+    width: 45,
+    height: 45,
+    borderRadius: BorderRadius.medium,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 12,
   },
-  statIcon: {
-    fontSize: 20,
-  },
-  statContent: {
-    gap: 2,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: "#6B7280",
-    fontWeight: "600",
-  },
-  statValue: {
-    fontSize: 26,
-    fontWeight: "800",
-    color: "#111827",
-  },
-  subValue: {
-    fontSize: 10,
-    color: "#9CA3AF",
-    fontWeight: "500",
-  },
-  actionCard: {
-    marginHorizontal: 20,
-    marginTop: 30,
-    borderRadius: 24,
-    overflow: "hidden",
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-  },
-  actionGrad: {
-    padding: 25,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  actionTitle: {
-    color: "#FFF",
-    fontSize: 18,
+  actionLabel: {
+    fontSize: 14,
     fontWeight: "700",
-  },
-  actionSub: {
-    color: "rgba(255, 255, 255, 0.6)",
-    fontSize: 12,
-    marginTop: 4,
-  },
-  actionIcon: {
-    color: "#FFF",
-    fontSize: 24,
-    fontWeight: "300",
+    color: Colors.textPrimary,
   },
 });

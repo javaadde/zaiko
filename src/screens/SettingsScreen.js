@@ -13,6 +13,7 @@ import {
 import { API_BASE_URL } from "../services/api";
 import { useRouter } from "expo-router";
 import { ChevronRight, Archive } from "lucide-react-native";
+import { BorderRadius } from "../theme/colors";
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -140,7 +141,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 120,
     height: 120,
-    borderRadius: 30,
+    borderRadius: BorderRadius.large,
     backgroundColor: "#F3F4F6",
     marginBottom: 10,
   },
@@ -169,7 +170,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: "#FFF",
-    borderRadius: 30,
+    borderRadius: BorderRadius.large,
     borderWidth: 1,
     borderColor: "#F3F4F6",
     overflow: "hidden",
@@ -204,7 +205,7 @@ const styles = StyleSheet.create({
   statusBadge: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 12,
+    borderRadius: BorderRadius.medium,
   },
   badgeText: {
     color: "#FFF",
@@ -224,7 +225,7 @@ const styles = StyleSheet.create({
   knowMoreBtn: {
     paddingHorizontal: 24,
     paddingVertical: 16,
-    borderRadius: 20,
+    borderRadius: BorderRadius.large,
     backgroundColor: "#F3F4F6",
     width: "100%",
     alignItems: "center",
@@ -236,7 +237,7 @@ const styles = StyleSheet.create({
   },
   salesCard: {
     backgroundColor: "#FFF",
-    borderRadius: 30,
+    borderRadius: BorderRadius.large,
     padding: 20,
     flexDirection: "row",
     alignItems: "center",
@@ -251,7 +252,7 @@ const styles = StyleSheet.create({
   salesIconBox: {
     width: 50,
     height: 50,
-    borderRadius: 15,
+    borderRadius: BorderRadius.medium,
     backgroundColor: "#F3F4F6",
     alignItems: "center",
     justifyContent: "center",
