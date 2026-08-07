@@ -1,17 +1,17 @@
 import { createMMKV } from 'react-native-mmkv';
 
-export const storage = createMMKV({ id: 'takeone.preferences' });
+export const storage = createMMKV({ id: 'zaiko.preferences' });
 
 export const KEYS = {
-  themeMode: 'takeone.themeMode',
-  accent: 'takeone.accent',
-  corners: 'takeone.corners',
-  headline: 'takeone.headline',
-  userName: 'takeone.userName',
-  haptics: 'takeone.haptics',
-  pendingInviteCode: 'takeone.pendingInviteCode',
-  activeCompanyId: 'takeone.activeCompanyId',
-  activeEnvironmentId: 'takeone.activeEnvironmentId',
+  themeMode: 'zaiko.themeMode',
+  accent: 'zaiko.accent',
+  corners: 'zaiko.corners',
+  headline: 'zaiko.headline',
+  userName: 'zaiko.userName',
+  haptics: 'zaiko.haptics',
+  pendingInviteCode: 'zaiko.pendingInviteCode',
+  activeCompanyId: 'zaiko.activeCompanyId',
+  activeEnvironmentId: 'zaiko.activeEnvironmentId',
 } as const;
 
 export type ThemeMode = 'light' | 'dark' | 'auto';

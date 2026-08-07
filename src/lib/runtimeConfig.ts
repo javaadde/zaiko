@@ -7,7 +7,7 @@ const DEV_BASE_URL = Platform.select({
   default: 'http://localhost:5000/api',
 });
 
-const PROD_BASE_URL = 'https://takeone-stocks.onrender.com/api';
+const PROD_BASE_URL = 'https://zaiko-stocks.onrender.com/api';
 
 export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL?.trim() ||

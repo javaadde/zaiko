@@ -23,7 +23,7 @@ export default function AuthScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>TakeOne Mobiles</Text>
+        <Text style={styles.title}>Zaiko Mobiles</Text>
         <Text style={styles.subtitle}>Premium Mobile Store</Text>
       </View>
 

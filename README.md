@@ -1,7 +1,7 @@
 <h1 align="center">Zaiko</h1>
 
 <div align="center">
-  <img src="./images/zaiko rounded.png" alt="TakeOne Stocks logo" width="140" />
+  <img src="./images/zaiko rounded.png" alt="Zaiko Stocks logo" width="140" />
 
   <br />
   <br />
@@ -11,7 +11,7 @@
   <img alt="Firebase" src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=111827" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
 
-  <p>Mobile inventory and sales management for TakeOne Mobiles.</p>
+  <p>Mobile inventory and sales management for Zaiko Mobiles.</p>
 </div>
 
 ## Overview
@@ -55,14 +55,14 @@ Zaiko is an Expo + React Native inventory app built for a mobile retail workflow
 ### Prerequisites
 
 - Node.js 18+
-- npm
+- pnpm 11+
 - Expo CLI-compatible environment
 - Firebase project configured for Auth, Firestore, and Storage
 
 ### Install
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### Firebase Setup
@@ -91,26 +91,26 @@ If not set, the app uses the local development URL in development and the hosted
 ### Run
 
 ```bash
-npm run start
+pnpm start
 ```
 
 Available targets:
 
 ```bash
-npm run android
-npm run ios
-npm run web
+pnpm android
+pnpm ios
+pnpm web
 ```
 
 ## Scripts
 
-- `npm run start` - Start Expo
-- `npm run android` - Launch on Android
-- `npm run ios` - Launch on iOS
-- `npm run web` - Launch in web mode
-- `npm run lint` - Run linting
-- `npm run deploy:rules` - Deploy Firestore rules
-- `npm run deploy:indexes` - Deploy Firestore indexes
+- `pnpm start` - Start Expo
+- `pnpm android` - Launch on Android
+- `pnpm ios` - Launch on iOS
+- `pnpm web` - Launch in web mode
+- `pnpm lint` - Run linting
+- `pnpm deploy:rules` - Deploy Firestore rules
+- `pnpm deploy:indexes` - Deploy Firestore indexes
 
 ## Brand Assets
 

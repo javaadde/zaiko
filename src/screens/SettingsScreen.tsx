@@ -54,7 +54,7 @@ export default function SettingsScreen() {
               source={require('../../assets/icon.png')}
               style={styles.logo}
             />
-            <Text style={[styles.appName, { color: colors.textPrimary }]}>TakeOne Mobiles</Text>
+            <Text style={[styles.appName, { color: colors.textPrimary }]}>Zaiko Mobiles</Text>
             <Text style={[styles.appTagline, { color: colors.textSecondary }]}>Premium Mobile Store</Text>
           </View>
         </View>
