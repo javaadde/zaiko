@@ -3,15 +3,10 @@
     "name": "Zaiko Stocks",
     "slug": "zaiko-stocks",
     "version": "1.0.0",
-    "platforms": ["ios", "android"],
+    "platforms": ["android"],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "ios": {
-      "bundleIdentifier": "space.famio",
-      "supportsTablet": false,
-      "googleServicesFile": "./GoogleService-Info.plist"
-    },
     "android": {
       "package": "space.famio",
       "googleServicesFile": "./android/app/google-services.json",
@@ -29,8 +24,7 @@
       [
         "expo-build-properties",
         {
-          "ios": {
-            "useFrameworks": "static",
+          "android": {
             "forceStaticLinking": [
               "RNFBApp",
               "RNFBAuth",

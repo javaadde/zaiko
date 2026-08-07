@@ -6,7 +6,6 @@
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
-    "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
     "deploy:rules": "npx firebase deploy --only firestore:rules",
@@ -23,7 +22,6 @@
     "@react-native-firebase/storage": "^24.1.1",
     "@react-native-google-signin/google-signin": "^16.1.2",
     "expo": "~56.0.11",
-    "expo-apple-authentication": "~56.0.4",
     "expo-av": "~16.0.8",
     "expo-blur": "~56.0.4",
     "expo-camera": "~56.0.8",
@@ -44,7 +42,6 @@
     "expo-status-bar": "~56.0.4",
     "expo-symbols": "~56.0.6",
     "expo-system-ui": "~56.0.5",
-    "expo-tracking-transparency": "~56.0.5",
     "expo-updates": "~56.0.19",
     "expo-web-browser": "~56.0.5",
     "lucide-react-native": "^1.18.0",
