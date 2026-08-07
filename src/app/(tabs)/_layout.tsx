@@ -1,34 +1,29 @@
-import React, { useEffect } from "react";
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Platform,
-  Dimensions,
-} from "react-native";
-import { BlurView } from "expo-blur";
-import { Tabs } from "expo-router";
+import React, { useEffect } from 'react';
+import { Platform, Dimensions, StyleSheet, View, TouchableOpacity } from 'react-native';
+import { BlurView } from 'expo-blur';
+import { Tabs } from 'expo-router';
 import {
   LayoutDashboard,
   Package,
   Plus,
   History,
   User,
-} from "lucide-react-native";
+} from 'lucide-react-native';
 import Animated, {
   useAnimatedStyle,
   withSpring,
   useSharedValue,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
 import SwipeWrapper from '@/components/SwipeWrapper';
-import { BorderRadius } from '@/constants/tokens';
+import { useTheme } from '@/hooks/use-theme';
+import { dashboardTabRoutes, type DashboardTabKey } from '@/constants/navigation';
 
-const { width } = Dimensions.get("window");
+const { width } = Dimensions.get('window');
 const TAB_BAR_HORIZONTAL_MARGIN = 20;
 const TAB_BAR_WIDTH = width - TAB_BAR_HORIZONTAL_MARGIN * 2;
 const TAB_WIDTH = TAB_BAR_WIDTH / 5;
 
-function AnimatedIcon({ children, isFocused }) {
+function AnimatedIcon({ children, isFocused }: { children: React.ReactNode; isFocused: boolean }) {
   const scale = useSharedValue(isFocused ? 1 : 1);
 
   useEffect(() => {
@@ -45,7 +40,7 @@ function AnimatedIcon({ children, isFocused }) {
   return <Animated.View style={animatedStyle}>{children}</Animated.View>;
 }
 
-function MyTabBar({ state, descriptors, navigation }) {
+function MyTabBar({ state, descriptors, navigation }: any) {
   const translateX = useSharedValue(state.index * TAB_WIDTH);
 
   useEffect(() => {
@@ -66,6 +61,8 @@ function MyTabBar({ state, descriptors, navigation }) {
     };
   });
 
+  const { colors, radii } = useTheme();
+
   return (
     <View style={styles.tabBarContainer}>
       <View style={styles.tabBar}>
@@ -75,14 +72,20 @@ function MyTabBar({ state, descriptors, navigation }) {
           experimentalBlurMethod="dimezisBlurView"
           style={styles.tabBarBlur}
         />
-        <Animated.View style={[styles.fluidSlider, animatedSliderStyle]} />
-        {state.routes.map((route, index) => {
+        <Animated.View
+          style={[
+            styles.fluidSlider,
+            animatedSliderStyle,
+            { borderRadius: radii.full, backgroundColor: colors.accent },
+          ]}
+        />
+        {state.routes.map((route: any, index: number) => {
           const { options } = descriptors[route.key];
           const isFocused = state.index === index;
 
           const onPress = () => {
             const event = navigation.emit({
-              type: "tabPress",
+              type: 'tabPress',
               target: route.key,
               canPreventDefault: true,
             });
@@ -93,7 +96,7 @@ function MyTabBar({ state, descriptors, navigation }) {
           };
 
           const Icon = options.tabBarIcon;
-          const color = isFocused ? "#FFF" : "#B2BEC3";
+          const color = isFocused ? '#FFF' : '#B2BEC3';
 
           return (
             <TouchableOpacity
@@ -120,7 +123,7 @@ export default function TabLayout() {
         tabBar={(props) => <MyTabBar {...props} />}
         screenOptions={{
           headerShown: false,
-          animation: "none",
+          animation: 'none',
         }}
       >
         <Tabs.Screen
@@ -171,7 +174,11 @@ export default function TabLayout() {
           name="settings"
           options={{
             tabBarIcon: ({ color, focused }) => (
-              <User size={22} color={color} strokeWidth={focused ? 2.5 : 2} />
+              <User
+                size={22}
+                color={color}
+                strokeWidth={focused ? 2.5 : 2}
+              />
             ),
           }}
         />
@@ -182,49 +189,41 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   tabBarContainer: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 0,
-    width: "100%",
-    paddingBottom: Platform.OS === "ios" ? 40 : 25,
+    width: '100%',
+    paddingBottom: Platform.OS === 'ios' ? 40 : 25,
     paddingHorizontal: TAB_BAR_HORIZONTAL_MARGIN,
-    backgroundColor: "transparent",
+    backgroundColor: 'transparent',
   },
   tabBar: {
     height: 70,
-    borderRadius: BorderRadius.full,
-    backgroundColor: "rgba(255,255,255,0.72)",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
+    borderRadius: 9999,
+    backgroundColor: 'rgba(255,255,255,0.72)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
     elevation: 25,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.1,
     shadowRadius: 15,
   },
   tabBarBlur: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   tabItem: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
     zIndex: 2,
   },
   fluidSlider: {
-    position: "absolute",
+    position: 'absolute',
     width: 52,
     height: 52,
-    borderRadius: BorderRadius.full,
-    backgroundColor: "#1E272E",
-    left: (TAB_WIDTH - 52) / 2,
-    zIndex: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
+    borderRadius: 9999,
   },
 });

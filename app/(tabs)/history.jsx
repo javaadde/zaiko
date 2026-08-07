@@ -1,5 +1,5 @@
-import SalesHistoryScreen from "../../src/screens/SalesHistoryScreen";
-import AnimatedPage from "../../src/components/AnimatedPage";
+import SalesHistoryScreen from '../../src/screens/SalesHistoryScreen';
+import AnimatedPage from '../../src/components/AnimatedPage';
 
 export default function HistoryRoute() {
   return (

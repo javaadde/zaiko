@@ -1,6 +1,7 @@
-import DashboardScreen from "../../src/screens/DashboardScreen";
-import { useRouter } from "expo-router";
-import AnimatedPage from "../../src/components/AnimatedPage";
+import DashboardScreen from '../../src/screens/DashboardScreen';
+import { useRouter } from 'expo-router';
+import AnimatedPage from '../../src/components/AnimatedPage';
+import { dashboardTabRoutes } from '../../src/constants/navigation';
 
 export default function DashboardRoute() {
   const router = useRouter();
@@ -8,13 +9,8 @@ export default function DashboardRoute() {
     <AnimatedPage>
       <DashboardScreen
         onTabChange={(tab) => {
-          const map = {
-            Stocks: "/stocks",
-            AddStock: "/add",
-            History: "/history",
-            Settings: "/settings",
-          };
-          if (map[tab]) router.push(map[tab]);
+          const route = dashboardTabRoutes[tab];
+          if (route) router.push(route);
         }}
       />
     </AnimatedPage>

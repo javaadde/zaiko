@@ -1,63 +1,56 @@
 {
   "expo": {
-    "name": "TakeOne Mobile",
-    "slug": "takeone",
+    "name": "TakeOne Stocks",
+    "slug": "takeone-stocks",
     "version": "1.0.0",
-    "scheme": "takeone",
+    "platforms": ["ios", "android"],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0B0E1A"
-    },
+    "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.takeone.mobile",
-      "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+      "bundleIdentifier": "space.famio",
+      "supportsTablet": false,
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
+      "package": "space.famio",
+      "googleServicesFile": "./android/app/google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0B0E1A"
-      },
-      "edgeToEdgeEnabled": true,
-      "package": "com.takeone.mobile"
+        "backgroundColor": "#FFFFFF"
+      }
     },
     "web": {
-      "bundler": "metro",
-      "output": "static",
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router",
+      "expo-splash-screen",
       [
-        "expo-image-picker",
+        "expo-build-properties",
         {
-          "cameraPermission": "TakeOne needs camera access to take product photos for your inventory."
+          "ios": {
+            "useFrameworks": "static",
+            "forceStaticLinking": [
+              "RNFBApp",
+              "RNFBAuth",
+              "RNFBFirestore",
+              "RNFBStorage",
+              "RNFBCrashlytics",
+              "RNFBRemoteConfig"
+            ]
+          }
         }
       ],
-      [
-        "expo-camera",
-        {
-          "cameraPermission": "Allow TakeOne to access your camera",
-          "microphonePermission": "Allow TakeOne to access your microphone"
-        }
-      ],
-      "expo-av"
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      "@react-native-firebase/firestore",
+      "@react-native-firebase/storage",
+      "@react-native-firebase/crashlytics",
+      "@react-native-firebase/remote-config"
     ],
     "experiments": {
-      "typedRoutes": false
-    },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "202d45d4-6639-4e0d-bcda-db245aaff5e4"
-      }
+      "typedRoutes": true
     }
   }
 }

@@ -1,2 +1,3 @@
-import SellScreen from "../src/screens/SellScreen";
+import SellScreen from '@/src/screens/SellScreen';
+
 export default SellScreen;

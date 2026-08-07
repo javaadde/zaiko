@@ -1,2 +1,3 @@
-import SellVerifyScreen from "../../src/screens/SellVerifyScreen";
+import SellVerifyScreen from '@/src/screens/SellVerifyScreen';
+
 export default SellVerifyScreen;

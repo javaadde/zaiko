@@ -1,0 +1,88 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+
+    function companyDoc(companyId) {
+      return get(/databases/$(database)/documents/companies/$(companyId));
+    }
+
+    function isCompanyMember(companyId) {
+      return request.auth.uid in companyDoc(companyId).data.members;
+    }
+
+    function isCompanyAdmin(companyId) {
+      return request.auth.uid in companyDoc(companyId).data.admins;
+    }
+
+    function envDoc(companyId, envId) {
+      return get(/databases/$(database)/documents/companies/$(companyId)/environments/$(envId));
+    }
+
+    function isEnvMember(companyId, envId) {
+      return request.auth.uid in envDoc(companyId, envId).data.members;
+    }
+
+    function isEnvAdmin(companyId, envId) {
+      return request.auth.uid in envDoc(companyId, envId).data.admins;
+    }
+
+    match /users/{uid} {
+      allow get: if isSignedIn() && isOwner(uid);
+      allow list: if false;
+      allow create: if isSignedIn() && isOwner(uid);
+      allow update: if isSignedIn() && isOwner(uid);
+      allow delete: if false;
+
+      match /private/{docId} {
+        allow read, write: if isSignedIn() && isOwner(uid);
+      }
+    }
+
+    match /companies/{companyId} {
+      allow read: if isSignedIn() && isCompanyMember(companyId);
+      allow create: if isSignedIn()
+        && request.auth.uid == request.resource.data.ownerId
+        && request.auth.uid in request.resource.data.members;
+      allow update: if isSignedIn() && isCompanyMember(companyId)
+        && (
+          request.resource.data.get('deletedAt', null) == resource.data.get('deletedAt', null)
+          || request.auth.uid == resource.data.ownerId
+        );
+      allow delete: if false;
+
+      match /environments/{envId} {
+        allow read: if isSignedIn() && isEnvMember(companyId, envId);
+        allow create: if isSignedIn() && isCompanyAdmin(companyId)
+          && request.auth.uid in request.resource.data.members;
+        allow update: if isSignedIn() && isEnvMember(companyId, envId)
+          && (
+            request.resource.data.get('deletedAt', null) == resource.data.get('deletedAt', null)
+            || isEnvAdmin(companyId, envId)
+          );
+        allow delete: if false;
+
+        match /inventory/{itemId} {
+          allow read: if isSignedIn() && isEnvMember(companyId, envId);
+          allow create: if isSignedIn() && isEnvMember(companyId, envId);
+          allow update: if isSignedIn() && isEnvMember(companyId, envId);
+          allow delete: if false;
+        }
+
+        match /sales/{saleId} {
+          allow read: if isSignedIn() && isEnvMember(companyId, envId);
+          allow create: if isSignedIn() && isEnvMember(companyId, envId);
+          allow update: if isSignedIn() && isEnvMember(companyId, envId);
+          allow delete: if false;
+        }
+      }
+    }
+  }
+}
