@@ -1,3 +1,11 @@
-import SellScreen from '@/screens/SellScreen';
+import React, { Suspense, lazy } from 'react';
 
-export default SellScreen;
+const LazySellScreen = lazy(() => import('@/screens/SellScreen'));
+
+export default function SellRoute() {
+  return (
+    <Suspense fallback={null}>
+      <LazySellScreen />
+    </Suspense>
+  );
+}

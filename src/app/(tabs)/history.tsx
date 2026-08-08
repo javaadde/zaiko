@@ -1,10 +1,11 @@
-import SalesHistoryScreen from '@/screens/SalesHistoryScreen';
-import AnimatedPage from '@/components/AnimatedPage';
+import React, { Suspense, lazy } from 'react';
+
+const LazySalesHistoryScreen = lazy(() => import('@/screens/SalesHistoryScreen'));
 
 export default function HistoryRoute() {
   return (
-    <AnimatedPage>
-      <SalesHistoryScreen />
-    </AnimatedPage>
+    <Suspense fallback={null}>
+      <LazySalesHistoryScreen />
+    </Suspense>
   );
 }

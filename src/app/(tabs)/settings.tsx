@@ -1,10 +1,11 @@
-import SettingsScreen from '@/screens/SettingsScreen';
-import AnimatedPage from '@/components/AnimatedPage';
+import React, { Suspense, lazy } from 'react';
+
+const LazySettingsScreen = lazy(() => import('@/screens/SettingsScreen'));
 
 export default function SettingsRoute() {
   return (
-    <AnimatedPage>
-      <SettingsScreen />
-    </AnimatedPage>
+    <Suspense fallback={null}>
+      <LazySettingsScreen />
+    </Suspense>
   );
 }

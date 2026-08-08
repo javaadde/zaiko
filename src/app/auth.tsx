@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import Constants from 'expo-constants';
 import { Colors, BorderRadius } from '@/constants/tokens';
 import { useAuthStore } from '@/stores/auth-store';
 
 export default function AuthScreen() {
-  const router = useRouter();
-  const { signInWithGoogle, signInWithApple, signInWithEmail, signUpWithEmail, clearError, authError, status } = useAuthStore();
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail, clearError, authError, status } = useAuthStore();
   const isExpoGo = Constants.appOwnership === 'expo';
-  const canUseAppleAuth = Platform.OS === 'ios' && !isExpoGo;
   const canUseGoogleAuth = !isExpoGo;
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
@@ -35,12 +32,6 @@ export default function AuthScreen() {
         {canUseGoogleAuth && (
           <TouchableOpacity style={styles.googleBtn} onPress={signInWithGoogle}>
             <Text style={styles.googleBtnText}>Continue with Google</Text>
-          </TouchableOpacity>
-        )}
-
-        {canUseAppleAuth && (
-          <TouchableOpacity style={styles.appleBtn} onPress={signInWithApple}>
-            <Text style={styles.appleBtnText}>Continue with Apple</Text>
           </TouchableOpacity>
         )}
 

@@ -20,7 +20,6 @@ export type AuthState = {
 export type AuthActions = {
   initAuth: () => () => void;
   signInWithGoogle: () => Promise<void>;
-  signInWithApple: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -42,87 +41,102 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
   authError: null,
 
   initAuth: () => {
-    const unsub = auth().onAuthStateChanged(async (fbUser) => {
-      if (fbUser) {
-        const userRef = firestore().collection('users').doc(fbUser.uid);
-        const snap = await userRef.get();
-        const data = snap.data() ?? {};
-        const user: User = {
-          uid: fbUser.uid,
-          displayName: data.displayName ?? fbUser.displayName ?? 'User',
-          email: data.email ?? fbUser.email ?? '',
-          personalColor: data.personalColor ?? '#1F8A5B',
-          photoURL: data.photoURL ?? fbUser.photoURL ?? null,
-          phoneNumber: data.phoneNumber ?? fbUser.phoneNumber ?? null,
-          createdAt: data.createdAt?.toMillis() ?? Date.now(),
-          updatedAt: data.updatedAt?.toMillis() ?? Date.now(),
-          deletedAt: data.deletedAt?.toMillis() ?? null,
-        };
+    const unsub = auth().onAuthStateChanged((fbUser) => {
+      void (async () => {
+        try {
+          if (!fbUser) {
+            set({
+              status: 'unauthenticated',
+              currentUser: null,
+              currentCompany: null,
+              currentEnvironment: null,
+              companies: [],
+              environments: [],
+              authError: null,
+            });
+            return;
+          }
 
-        const companiesSnap = await userRef.collection('companies').get();
-        const companies: Company[] = companiesSnap.docs.map((d) => {
-          const c = d.data();
-          return {
-            id: d.id,
-            name: c.name ?? '',
-            slug: c.slug ?? '',
-            ownerId: c.ownerId ?? '',
-            members: c.members ?? [],
-            admins: c.admins ?? [],
-            createdAt: c.createdAt?.toMillis() ?? Date.now(),
-            updatedAt: c.updatedAt?.toMillis() ?? Date.now(),
-            deletedAt: c.deletedAt?.toMillis() ?? null,
+          const userRef = firestore().collection('users').doc(fbUser.uid);
+          const snap = await userRef.get();
+          const data = snap.data() ?? {};
+          const user: User = {
+            uid: fbUser.uid,
+            displayName: data.displayName ?? fbUser.displayName ?? 'User',
+            email: data.email ?? fbUser.email ?? '',
+            personalColor: data.personalColor ?? '#1F8A5B',
+            photoURL: data.photoURL ?? fbUser.photoURL ?? null,
+            phoneNumber: data.phoneNumber ?? fbUser.phoneNumber ?? null,
+            createdAt: data.createdAt?.toMillis() ?? Date.now(),
+            updatedAt: data.updatedAt?.toMillis() ?? Date.now(),
+            deletedAt: data.deletedAt?.toMillis() ?? null,
           };
-        });
 
-        const activeCompanyId = companies[0]?.id ?? null;
-        const activeCompany = companies.find((c) => c.id === activeCompanyId) ?? null;
-
-        let environments: Environment[] = [];
-        if (activeCompany) {
-          const envSnap = await firestore()
-            .collection('companies')
-            .doc(activeCompany.id)
-            .collection('environments')
-            .get();
-          environments = envSnap.docs.map((d) => {
-            const e = d.data();
+          const companiesSnap = await userRef.collection('companies').get();
+          const companies: Company[] = companiesSnap.docs.map((d) => {
+            const c = d.data();
             return {
               id: d.id,
-              companyId: e.companyId ?? activeCompany.id,
-              name: e.name ?? '',
-              type: e.type ?? 'development',
-              members: e.members ?? [],
-              admins: e.admins ?? [],
-              createdAt: e.createdAt?.toMillis() ?? Date.now(),
-              updatedAt: e.updatedAt?.toMillis() ?? Date.now(),
-              deletedAt: e.deletedAt?.toMillis() ?? null,
+              name: c.name ?? '',
+              slug: c.slug ?? '',
+              ownerId: c.ownerId ?? '',
+              members: c.members ?? [],
+              admins: c.admins ?? [],
+              createdAt: c.createdAt?.toMillis() ?? Date.now(),
+              updatedAt: c.updatedAt?.toMillis() ?? Date.now(),
+              deletedAt: c.deletedAt?.toMillis() ?? null,
             };
           });
+
+          const activeCompanyId = companies[0]?.id ?? null;
+          const activeCompany = companies.find((c) => c.id === activeCompanyId) ?? null;
+
+          let environments: Environment[] = [];
+          if (activeCompany) {
+            const envSnap = await firestore()
+              .collection('companies')
+              .doc(activeCompany.id)
+              .collection('environments')
+              .get();
+            environments = envSnap.docs.map((d) => {
+              const e = d.data();
+              return {
+                id: d.id,
+                companyId: e.companyId ?? activeCompany.id,
+                name: e.name ?? '',
+                type: e.type ?? 'development',
+                members: e.members ?? [],
+                admins: e.admins ?? [],
+                createdAt: e.createdAt?.toMillis() ?? Date.now(),
+                updatedAt: e.updatedAt?.toMillis() ?? Date.now(),
+                deletedAt: e.deletedAt?.toMillis() ?? null,
+              };
+            });
+          }
+
+          const activeEnvironment = environments[0] ?? null;
+
+          set({
+            status: 'authenticated',
+            currentUser: user,
+            companies,
+            currentCompany: activeCompany,
+            environments,
+            currentEnvironment: activeEnvironment,
+            authError: null,
+          });
+        } catch (err) {
+          set({
+            status: 'unauthenticated',
+            currentUser: null,
+            currentCompany: null,
+            currentEnvironment: null,
+            companies: [],
+            environments: [],
+            authError: getUserFriendlyError(err, 'Auth initialization failed'),
+          });
         }
-
-        const activeEnvironment = environments[0] ?? null;
-
-        set({
-          status: 'authenticated',
-          currentUser: user,
-          companies,
-          currentCompany: activeCompany,
-          environments,
-          currentEnvironment: activeEnvironment,
-          authError: null,
-        });
-      } else {
-        set({
-          status: 'unauthenticated',
-          currentUser: null,
-          currentCompany: null,
-          currentEnvironment: null,
-          companies: [],
-          environments: [],
-          authError: null,
-        });
-      }
+      })();
     });
 
     return unsub;
@@ -144,27 +158,6 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
       await auth().signInWithCredential(credential);
     } catch (err) {
       const message = getUserFriendlyError(err, 'Google Sign-In failed');
-      set({ authError: message, status: 'unauthenticated' });
-    }
-  },
-
-  signInWithApple: async () => {
-    set({ authError: null, status: 'loading' });
-    try {
-      if (Constants.appOwnership === 'expo') {
-        throw new Error('Apple Sign-In requires a development build, not Expo Go.');
-      }
-      const { signInAsync, AppleAuthenticationScope } = await import('expo-apple-authentication');
-      const credential = await signInAsync({
-        requestedScopes: [AppleAuthenticationScope.FULL_NAME, AppleAuthenticationScope.EMAIL],
-      });
-      if (!credential.identityToken) {
-        throw new Error('Apple Sign-In failed: no identity token');
-      }
-      const appleCredential = auth.AppleAuthProvider.credential(credential.identityToken);
-      await auth().signInWithCredential(appleCredential);
-    } catch (err) {
-      const message = getUserFriendlyError(err, 'Apple Sign-In failed');
       set({ authError: message, status: 'unauthenticated' });
     }
   },

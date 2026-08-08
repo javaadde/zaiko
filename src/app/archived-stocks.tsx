@@ -1,10 +1,11 @@
-import ArchivedStocksScreen from '@/screens/ArchivedStocksScreen';
-import AnimatedPage from '@/components/AnimatedPage';
+import React, { Suspense, lazy } from 'react';
+
+const LazyArchivedStocksScreen = lazy(() => import('@/screens/ArchivedStocksScreen'));
 
 export default function ArchivedStocksRoute() {
   return (
-    <AnimatedPage>
-      <ArchivedStocksScreen />
-    </AnimatedPage>
+    <Suspense fallback={null}>
+      <LazyArchivedStocksScreen />
+    </Suspense>
   );
 }

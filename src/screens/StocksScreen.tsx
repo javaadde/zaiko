@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -13,12 +13,10 @@ import {
   Alert,
   Modal,
 } from 'react-native';
-import Animated, { useSharedValue, withSpring, withTiming, useAnimatedStyle } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Smartphone, PackageOpen, Search, Filter } from 'lucide-react-native';
 import { useTheme } from '@/hooks/use-theme';
-import { getInventoryItems, deleteInventoryItem, archiveInventoryItem } from '@/services/inventory';
+import { getInventoryItems, deleteInventoryItem } from '@/services/inventory';
 import { brandCategories, brandPalette } from '@/data/brands';
 import StockCard from '@/components/StockCard';
 import type { InventoryItem } from '@/types';
@@ -62,7 +60,7 @@ function CategoryIcon({ label, icon, active, onPress, isImage, bgColor }: Catego
 
 export default function StocksScreen() {
   const router = useRouter();
-  const { colors, radii, shadows } = useTheme();
+  const { colors } = useTheme();
   const [search, setSearch] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('All');
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -71,19 +69,6 @@ export default function StocksScreen() {
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [sortBy, setSortBy] = useState('createdAt');
   const [isFilterVisible, setIsFilterVisible] = useState(false);
-
-  const headerAnim = useSharedValue(-10);
-  const headerOpacity = useSharedValue(0);
-
-  useEffect(() => {
-    headerAnim.value = withSpring(0, { stiffness: 50, damping: 7 });
-    headerOpacity.value = withTiming(1, { duration: 800 });
-  }, []);
-
-  const headerStyle = useAnimatedStyle(() => ({
-    opacity: headerOpacity.value,
-    transform: [{ translateY: headerAnim.value }],
-  }));
 
   const fetchItems = useCallback(async () => {
     try {
@@ -142,29 +127,27 @@ export default function StocksScreen() {
         contentContainerStyle={styles.scroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        <Animated.View style={headerStyle}>
-          <View style={styles.header}>
-            <View style={styles.searchRow}>
-              <View style={[styles.searchBox, { backgroundColor: colors.bgCardAlt, borderColor: colors.border }]}>
-                <Search size={20} color={colors.textSecondary} strokeWidth={2} />
-                <TextInput
-                  placeholder="Search inventory..."
-                  style={[styles.searchInput, { color: colors.textPrimary }]}
-                  placeholderTextColor={colors.textMuted}
-                  value={search}
-                  onChangeText={setSearch}
-                />
-              </View>
-              <TouchableOpacity
-                style={[styles.filterBtn, { backgroundColor: colors.primary }]}
-                activeOpacity={0.8}
-                onPress={() => setIsFilterVisible(true)}
-              >
-                <Filter size={20} color="#FFF" strokeWidth={2} />
-              </TouchableOpacity>
+        <View style={styles.header}>
+          <View style={styles.searchRow}>
+            <View style={[styles.searchBox, { backgroundColor: colors.bgCardAlt, borderColor: colors.border }]}> 
+              <Search size={20} color={colors.textSecondary} strokeWidth={2} />
+              <TextInput
+                placeholder="Search inventory..."
+                style={[styles.searchInput, { color: colors.textPrimary }]}
+                placeholderTextColor={colors.textMuted}
+                value={search}
+                onChangeText={setSearch}
+              />
             </View>
+            <TouchableOpacity
+              style={[styles.filterBtn, { backgroundColor: colors.primary }]}
+              activeOpacity={0.8}
+              onPress={() => setIsFilterVisible(true)}
+            >
+              <Filter size={20} color="#FFF" strokeWidth={2} />
+            </TouchableOpacity>
           </View>
-        </Animated.View>
+        </View>
 
         <ScrollView
           horizontal
