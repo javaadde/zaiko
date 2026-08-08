@@ -14,7 +14,6 @@ import { requestTrackingOnce } from '@/lib/tracking';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  'use no memo';
   const fontsLoaded = true;
   const themeMode = usePreferenceStore((s) => s.themeMode);
   const authLoading = useAuthStore((s) => s.status === 'loading');

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "613503506472",
+    "project_id": "zaiko-space",
+    "storage_bucket": "zaiko-space.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:613503506472:android:1968b31d8d7435168d7d1d",
+        "android_client_info": {
+          "package_name": "zaiko.space"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAevrd6TALKvo6yGyZP0A4iN8QsMclW8r8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

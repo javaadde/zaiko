@@ -1,15 +1,17 @@
 {
   "expo": {
-    "name": "Zaiko Stocks",
-    "slug": "zaiko-stocks",
+    "name": "zaiko.space",
+    "slug": "zaiko-space",
     "version": "1.0.0",
-    "platforms": ["android"],
+    "platforms": [
+      "android"
+    ],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "android": {
-      "package": "space.famio",
-      "googleServicesFile": "./android/app/google-services.json",
+      "package": "zaiko.space",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
@@ -35,16 +37,16 @@
             ]
           }
         }
-      ],
-      "@react-native-firebase/app",
-      "@react-native-firebase/auth",
-      "@react-native-firebase/firestore",
-      "@react-native-firebase/storage",
-      "@react-native-firebase/crashlytics",
-      "@react-native-firebase/remote-config"
+      ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f8cd8193-c76e-4c3e-a52c-cb32f8186e93"
+      }
     }
   }
 }
