@@ -18,7 +18,7 @@ export default function SetupScreen() {
     try {
       setError('');
       await createCompany(companyName.trim());
-      router.replace('/(tabs)');
+      router.replace('/(tabs)' as never);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create company');
     }

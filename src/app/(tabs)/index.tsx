@@ -10,7 +10,7 @@ export default function DashboardRoute() {
       <DashboardScreen
         onTabChange={(tab) => {
           const route = dashboardTabRoutes[tab];
-          if (route) router.push(route);
+          if (route) router.push(route as never);
         }}
       />
     </AnimatedPage>

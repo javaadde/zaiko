@@ -29,7 +29,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <ThemeProvider>
-        <StatusBar style="dark" backgroundColor="#EFF6FF" />
+        <StatusBar style="dark" />
         <Stack
           screenOptions={{
             headerShown: false,
@@ -43,8 +43,8 @@ export default function RootLayout() {
           <Stack.Screen name="sell-verify/[id]" />
           <Stack.Screen name="archived-stocks" />
         </Stack>
-        {!currentUser && <Redirect href="/auth" />}
-        {currentUser && !currentCompany && <Redirect href="/setup" />}
+        {!currentUser && <Redirect href={'/auth' as never} />}
+        {currentUser && !currentCompany && <Redirect href={'/setup' as never} />}
       </ThemeProvider>
     </GestureHandlerRootView>
   );

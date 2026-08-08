@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, type ComponentProps, type ReactNode } from 'react';
 import { Platform, Dimensions, StyleSheet, View, TouchableOpacity } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
@@ -22,7 +22,14 @@ const TAB_BAR_HORIZONTAL_MARGIN = 20;
 const TAB_BAR_WIDTH = width - TAB_BAR_HORIZONTAL_MARGIN * 2;
 const TAB_WIDTH = TAB_BAR_WIDTH / 5;
 
-function AnimatedIcon({ children, isFocused }) {
+type AnimatedIconProps = {
+  children: ReactNode;
+  isFocused: boolean;
+};
+
+type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
+
+function AnimatedIcon({ children, isFocused }: AnimatedIconProps) {
   const scale = useSharedValue(isFocused ? 1 : 1);
 
   useEffect(() => {
@@ -39,26 +46,24 @@ function AnimatedIcon({ children, isFocused }) {
   return <Animated.View style={animatedStyle}>{children}</Animated.View>;
 }
 
-function MyTabBar({ state, descriptors, navigation }) {
+function MyTabBar({ state, descriptors, navigation }: TabBarProps) {
   const translateX = useSharedValue(state.index * TAB_WIDTH);
 
   useEffect(() => {
     translateX.value = state.index * TAB_WIDTH;
   }, [state.index]);
 
-  const animatedSliderStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        {
-          translateX: withSpring(translateX.value, {
-            damping: 15,
-            stiffness: 120,
-            mass: 0.8,
-          }),
-        },
-      ],
-    };
-  });
+  const animatedSliderStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateX: withSpring(translateX.value, {
+          damping: 15,
+          stiffness: 120,
+          mass: 0.8,
+        }),
+      },
+    ],
+  }));
 
   return (
     <View style={styles.tabBarContainer}>
@@ -97,7 +102,7 @@ function MyTabBar({ state, descriptors, navigation }) {
               activeOpacity={0.6}
             >
               <AnimatedIcon isFocused={isFocused}>
-                {Icon && Icon({ focused: isFocused, color })}
+                {Icon && Icon({ focused: isFocused, color, size: 22 })}
               </AnimatedIcon>
             </TouchableOpacity>
           );
@@ -198,7 +203,7 @@ const styles = StyleSheet.create({
     shadowRadius: 15,
   },
   tabBarBlur: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   tabItem: {
     flex: 1,

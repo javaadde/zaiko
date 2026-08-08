@@ -28,7 +28,7 @@ export default function SwipeWrapper({ children }: SwipeWrapperProps) {
     }
 
     if (nextIndex !== currentIndex) {
-      router.push(ROUTES[nextIndex]);
+      router.push(ROUTES[nextIndex] as never);
     }
   };
 
