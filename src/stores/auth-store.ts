@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import Constants from 'expo-constants';
 import type { User, Company, Environment } from '@/types';
 import { auth, firestore } from '@/lib/firebase';
 import { getUserFriendlyError } from '@/lib/errors';
@@ -130,6 +131,9 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
   signInWithGoogle: async () => {
     set({ authError: null, status: 'loading' });
     try {
+      if (Constants.appOwnership === 'expo') {
+        throw new Error('Google Sign-In requires a development build, not Expo Go.');
+      }
       const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
@@ -147,6 +151,9 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
   signInWithApple: async () => {
     set({ authError: null, status: 'loading' });
     try {
+      if (Constants.appOwnership === 'expo') {
+        throw new Error('Apple Sign-In requires a development build, not Expo Go.');
+      }
       const { signInAsync, AppleAuthenticationScope } = await import('expo-apple-authentication');
       const credential = await signInAsync({
         requestedScopes: [AppleAuthenticationScope.FULL_NAME, AppleAuthenticationScope.EMAIL],

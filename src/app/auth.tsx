@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
+import Constants from 'expo-constants';
 import { Colors, BorderRadius } from '@/constants/tokens';
 import { useAuthStore } from '@/stores/auth-store';
 
 export default function AuthScreen() {
   const router = useRouter();
   const { signInWithGoogle, signInWithApple, signInWithEmail, signUpWithEmail, clearError, authError, status } = useAuthStore();
+  const isExpoGo = Constants.appOwnership === 'expo';
+  const canUseAppleAuth = Platform.OS === 'ios' && !isExpoGo;
+  const canUseGoogleAuth = !isExpoGo;
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,13 +32,17 @@ export default function AuthScreen() {
       </View>
 
       <View style={styles.card}>
-        <TouchableOpacity style={styles.googleBtn} onPress={signInWithGoogle}>
-          <Text style={styles.googleBtnText}>Continue with Google</Text>
-        </TouchableOpacity>
+        {canUseGoogleAuth && (
+          <TouchableOpacity style={styles.googleBtn} onPress={signInWithGoogle}>
+            <Text style={styles.googleBtnText}>Continue with Google</Text>
+          </TouchableOpacity>
+        )}
 
-        <TouchableOpacity style={styles.appleBtn} onPress={signInWithApple}>
-          <Text style={styles.appleBtnText}>Continue with Apple</Text>
-        </TouchableOpacity>
+        {canUseAppleAuth && (
+          <TouchableOpacity style={styles.appleBtn} onPress={signInWithApple}>
+            <Text style={styles.appleBtnText}>Continue with Apple</Text>
+          </TouchableOpacity>
+        )}
 
         <View style={styles.divider}>
           <View style={styles.dividerLine} />
@@ -85,7 +93,12 @@ export default function AuthScreen() {
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => { clearError(); setIsSignUp(!isSignUp); }}>
+        <TouchableOpacity
+          onPress={() => {
+            clearError();
+            setIsSignUp(!isSignUp);
+          }}
+        >
           <Text style={styles.toggleText}>
             {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
           </Text>

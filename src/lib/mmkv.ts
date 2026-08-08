@@ -1,6 +1,37 @@
-import { createMMKV } from 'react-native-mmkv';
+declare const require: any;
 
-export const storage = createMMKV({ id: 'zaiko.preferences' });
+type StorageLike = {
+  getString: (key: string) => string | undefined;
+  getBoolean: (key: string) => boolean | undefined;
+  set: (key: string, value: string | boolean) => void;
+};
+
+function createFallbackStorage(): StorageLike {
+  const values = new Map<string, string | boolean>();
+
+  return {
+    getString: (key) => {
+      const value = values.get(key);
+      return typeof value === 'string' ? value : undefined;
+    },
+    getBoolean: (key) => {
+      const value = values.get(key);
+      return typeof value === 'boolean' ? value : undefined;
+    },
+    set: (key, value) => {
+      values.set(key, value);
+    },
+  };
+}
+
+export const storage: StorageLike = (() => {
+  try {
+    const { createMMKV } = require('react-native-mmkv');
+    return createMMKV({ id: 'zaiko.preferences' });
+  } catch {
+    return createFallbackStorage();
+  }
+})();
 
 export const KEYS = {
   themeMode: 'zaiko.themeMode',

@@ -1,5 +1,5 @@
-import StocksScreen from '@/src/screens/StocksScreen';
-import AnimatedPage from '@/src/components/AnimatedPage';
+import StocksScreen from '@/screens/StocksScreen';
+import AnimatedPage from '@/components/AnimatedPage';
 
 export default function StocksRoute() {
   return (

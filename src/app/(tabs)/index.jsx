@@ -1,7 +1,7 @@
-import DashboardScreen from '../../src/screens/DashboardScreen';
+import DashboardScreen from '@/screens/DashboardScreen';
 import { useRouter } from 'expo-router';
-import AnimatedPage from '../../src/components/AnimatedPage';
-import { dashboardTabRoutes } from '../../src/constants/navigation';
+import AnimatedPage from '@/components/AnimatedPage';
+import { dashboardTabRoutes } from '@/constants/navigation';
 
 export default function DashboardRoute() {
   const router = useRouter();

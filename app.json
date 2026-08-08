@@ -2,6 +2,7 @@
   "expo": {
     "name": "zaiko.space",
     "slug": "zaiko-space",
+    "scheme": "zaiko-space",
     "version": "1.0.0",
     "platforms": [
       "android"

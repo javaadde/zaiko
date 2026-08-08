@@ -1,5 +1,5 @@
-import SettingsScreen from '@/src/screens/SettingsScreen';
-import AnimatedPage from '@/src/components/AnimatedPage';
+import SettingsScreen from '@/screens/SettingsScreen';
+import AnimatedPage from '@/components/AnimatedPage';
 
 export default function SettingsRoute() {
   return (
