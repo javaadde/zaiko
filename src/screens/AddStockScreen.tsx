@@ -20,10 +20,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Camera, Image as ImageIcon, Trash2, X, Plus, ImagePlus, Check, ChevronDown, ChevronUp, Smartphone } from 'lucide-react-native';
-import { Audio } from 'expo-av';
 import { useTheme } from '@/hooks/use-theme';
 import { getInventoryItem, createInventoryItem, updateInventoryItem, uploadInventoryImage, deleteInventoryItem } from '@/services/inventory';
 import { brandCategories, brandPalette } from '@/data/brands';
+import { playSuccessSound } from '@/lib/play-success-sound';
 import type { InventoryItem } from '@/types';
 
 type Props = {};
@@ -242,12 +242,7 @@ export default function AddStockScreen() {
       setLoading(false);
       setIsSuccess(true);
 
-      try {
-        const { sound } = await Audio.Sound.createAsync(require('../../assets/sounds/success.mp3'));
-        await sound.playAsync();
-      } catch {
-        // no-op
-      }
+      await playSuccessSound();
 
       Animated.timing(successAnim, {
         toValue: 1,

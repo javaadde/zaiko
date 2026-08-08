@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -7,38 +7,16 @@ import {
   TouchableOpacity,
   Image,
   StatusBar,
-  ActivityIndicator,
   Linking,
 } from 'react-native';
 import { ChevronRight, Archive } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/hooks/use-theme';
-import { API_BASE_URL, APP_VERSION } from '@/lib/runtimeConfig';
+import { APP_VERSION } from '@/lib/version';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { colors, radii, shadows } = useTheme();
-  const [serverStatus, setServerStatus] = useState('checking...');
-  const [loading, setLoading] = useState(false);
-
-  const checkConnectivity = async () => {
-    setLoading(true);
-    setServerStatus('checking...');
-    try {
-      const start = Date.now();
-      await fetch(`${API_BASE_URL}/health`);
-      const end = Date.now();
-      setServerStatus('Server is Online');
-    } catch (e) {
-      setServerStatus('No Connection');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    checkConnectivity();
-  }, []);
+  const { colors } = useTheme();
 
   const openPortfolio = () => {
     Linking.openURL('https://javade.in');
@@ -60,25 +38,15 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>System Status</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Backend</Text>
           <View style={[styles.card, { backgroundColor: colors.bgCardAlt, borderColor: colors.border }]}>
             <View style={styles.statusRow}>
               <View style={styles.statusInfo}>
-                <Text style={[styles.statusLabel, { color: colors.textMuted }]}>Connection Status</Text>
-                <Text style={[styles.urlText, { color: colors.textPrimary }]} numberOfLines={1}>
-                  {API_BASE_URL}
-                </Text>
+                <Text style={[styles.statusLabel, { color: colors.textMuted }]}>Data Layer</Text>
+                <Text style={[styles.urlText, { color: colors.textPrimary }]}>Firebase Firestore + Storage</Text>
               </View>
-              <View
-                style={[
-                  styles.statusBadge,
-                  {
-                    backgroundColor:
-                      serverStatus === 'Server is Online' ? '#10B981' : '#EF4444',
-                  },
-                ]}
-              >
-                <Text style={styles.badgeText}>{serverStatus}</Text>
+              <View style={[styles.statusBadge, { backgroundColor: '#10B981' }]}>
+                <Text style={styles.badgeText}>Active</Text>
               </View>
             </View>
           </View>

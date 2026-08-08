@@ -32,7 +32,7 @@ import { CameraView, Camera } from 'expo-camera';
 import { useTheme } from '@/hooks/use-theme';
 import { getInventoryItem } from '@/services/inventory';
 import { createSale as createSaleRecord } from '@/services/sales';
-import { Audio } from 'expo-av';
+import { playSuccessSound } from '@/lib/play-success-sound';
 import type { InventoryItem } from '@/types';
 
 export default function SellVerifyScreen() {
@@ -66,14 +66,7 @@ export default function SellVerifyScreen() {
       friction: 7,
       useNativeDriver: true,
     }).start();
-    try {
-      const { sound } = await Audio.Sound.createAsync(
-        require('../../assets/sounds/success.mp3'),
-      );
-      await sound.playAsync();
-    } catch {
-      // no-op
-    }
+    await playSuccessSound();
   };
 
   const finalizeSale = async () => {

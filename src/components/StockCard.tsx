@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { ArrowUpRight } from 'lucide-react-native';
 import { useTheme } from '@/hooks/use-theme';
+import { getBrandLogo } from '@/data/brands';
 import type { InventoryItem } from '@/types';
 
 const { width } = Dimensions.get('window');
@@ -14,9 +15,9 @@ type StockCardProps = {
 };
 
 export default function StockCard({ item, onDelete, onPress }: StockCardProps) {
-  const { colors, radii, shadows } = useTheme();
+  const { shadows } = useTheme();
   const hasImage = !!item.imageUrl;
-  const logo = item.brand ? require(`../../assets/logos/${item.brand.toLowerCase()}.png`) : null;
+  const logo = item.brand ? getBrandLogo(item.brand) : null;
 
   return (
     <TouchableOpacity
