@@ -24,6 +24,47 @@ function createUnavailableClient(name: string) {
   };
 }
 
+function createUnavailableFirestoreClient() {
+  const client: any = {
+    collection: () => client,
+    doc: () => client,
+    get: async () => ({
+      data: () => null,
+      docs: [],
+      exists: false,
+    }),
+    set: async () => {},
+    update: async () => {},
+    delete: async () => {},
+    where: () => client,
+    orderBy: () => client,
+    limit: () => client,
+    startAfter: () => client,
+    onSnapshot: () => () => {},
+    batch: () => ({
+      set: () => {},
+      update: () => {},
+      delete: () => {},
+      commit: async () => {},
+    }),
+  };
+
+  return client;
+}
+
+function createUnavailableStorageClient() {
+  const client: any = {
+    ref: () => client,
+    child: () => client,
+    putFile: async () => ({ ref: client }),
+    putString: async () => ({ ref: client }),
+    getDownloadURL: async () => '',
+    delete: async () => {},
+  };
+
+  return client;
+}
+
 function createUnavailableFn(name: string): FirebaseLikeFn {
   const fn = (() => createUnavailableClient(name)) as FirebaseLikeFn;
 
@@ -33,6 +74,59 @@ function createUnavailableFn(name: string): FirebaseLikeFn {
 
   fn.AppleAuthProvider = {
     credential: () => ({})
+  };
+
+  return fn;
+}
+
+function wrapFirebaseFn(nativeFn: any, name: string): FirebaseLikeFn {
+  const fn = ((...args: any[]) => {
+    try {
+      return nativeFn(...args);
+    } catch {
+      return createUnavailableClient(name);
+    }
+  }) as FirebaseLikeFn;
+
+  fn.GoogleAuthProvider = nativeFn.GoogleAuthProvider ?? {
+    credential: () => ({}),
+  };
+
+  fn.AppleAuthProvider = nativeFn.AppleAuthProvider ?? {
+    credential: () => ({}),
+  };
+
+  return fn;
+}
+
+function wrapFirestoreFn(nativeFn: any) {
+  const fn: any = (...args: any[]) => {
+    try {
+      return nativeFn(...args);
+    } catch {
+      return createUnavailableFirestoreClient();
+    }
+  };
+
+  fn.FieldValue = nativeFn.FieldValue ?? {
+    serverTimestamp: () => ({ toMillis: () => Date.now() }),
+    increment: (value: number) => value,
+  };
+
+  fn.Timestamp = nativeFn.Timestamp ?? {
+    fromMillis: (ms: number) => ({ toMillis: () => ms }),
+  };
+
+  return fn;
+}
+
+function wrapStorageFn(nativeFn: any) {
+  const fn: any = (...args: any[]) => {
+    try {
+      return nativeFn(...args);
+    } catch {
+      return createUnavailableStorageClient();
+    }
   };
 
   return fn;
@@ -59,9 +153,9 @@ try {
   const firebaseStorage = firebaseStorageModule.default ?? firebaseStorageModule;
 
   app = firebaseApp.getApp ? firebaseApp.getApp() : firebaseAppModule.getApp();
-  auth = firebaseAuth;
-  firestore = firebaseFirestore;
-  storage = firebaseStorage;
+  auth = wrapFirebaseFn(firebaseAuth, 'Firebase Auth');
+  firestore = wrapFirestoreFn(firebaseFirestore);
+  storage = wrapStorageFn(firebaseStorage);
 } catch {
   // Fall back to no-op/native-unavailable shims so the app can boot.
 }
