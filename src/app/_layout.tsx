@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Stack, Redirect } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider } from '@/providers/theme-context';
@@ -10,11 +10,28 @@ export default function RootLayout() {
   const authLoading = useAuthStore((s) => s.status === 'loading');
   const currentUser = useAuthStore((s) => s.currentUser);
   const currentCompany = useAuthStore((s) => s.currentCompany);
+  const segments = useSegments();
+  const router = useRouter();
 
   useEffect(() => {
     const unsub = useAuthStore.getState().initAuth();
     return unsub;
   }, []);
+
+  useEffect(() => {
+    if (authLoading) return;
+
+    const inAuthGroup = segments[0] === 'auth';
+    const inSetupGroup = segments[0] === 'setup';
+
+    if (!currentUser && !inAuthGroup) {
+      router.replace('/auth');
+    } else if (currentUser && !currentCompany && !inSetupGroup) {
+      router.replace('/setup');
+    } else if (currentUser && currentCompany && (inAuthGroup || inSetupGroup)) {
+      router.replace('/(tabs)');
+    }
+  }, [currentUser, currentCompany, authLoading, segments, router]);
 
   if (authLoading) {
     return (
@@ -43,8 +60,6 @@ export default function RootLayout() {
           <Stack.Screen name="sell-verify/[id]" />
           <Stack.Screen name="archived-stocks" />
         </Stack>
-        {!currentUser && <Redirect href={'/auth' as never} />}
-        {currentUser && !currentCompany && <Redirect href={'/setup' as never} />}
       </ThemeProvider>
     </GestureHandlerRootView>
   );
@@ -56,3 +71,4 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFF6FF',
   },
 });
+

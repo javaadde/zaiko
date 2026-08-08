@@ -24,6 +24,9 @@
     "plugins": [
       "expo-router",
       "expo-splash-screen",
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      "@react-native-firebase/crashlytics",
       [
         "expo-build-properties",
         {

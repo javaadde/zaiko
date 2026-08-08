@@ -1,11 +1,7 @@
-import React, { Suspense, lazy } from 'react';
-
-const LazySettingsScreen = lazy(() => import('@/screens/SettingsScreen'));
+import React from 'react';
+import SettingsScreen from '@/screens/SettingsScreen';
 
 export default function SettingsRoute() {
-  return (
-    <Suspense fallback={null}>
-      <LazySettingsScreen />
-    </Suspense>
-  );
+  return <SettingsScreen />;
 }
+

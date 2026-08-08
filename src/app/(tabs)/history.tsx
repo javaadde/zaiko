@@ -1,11 +1,7 @@
-import React, { Suspense, lazy } from 'react';
-
-const LazySalesHistoryScreen = lazy(() => import('@/screens/SalesHistoryScreen'));
+import React from 'react';
+import SalesHistoryScreen from '@/screens/SalesHistoryScreen';
 
 export default function HistoryRoute() {
-  return (
-    <Suspense fallback={null}>
-      <LazySalesHistoryScreen />
-    </Suspense>
-  );
+  return <SalesHistoryScreen />;
 }
+

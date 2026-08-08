@@ -1,11 +1,7 @@
-import React, { Suspense, lazy } from 'react';
-
-const LazySellVerifyScreen = lazy(() => import('@/screens/SellVerifyScreen'));
+import React from 'react';
+import SellVerifyScreen from '@/screens/SellVerifyScreen';
 
 export default function SellVerifyRoute() {
-  return (
-    <Suspense fallback={null}>
-      <LazySellVerifyScreen />
-    </Suspense>
-  );
+  return <SellVerifyScreen />;
 }
+

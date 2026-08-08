@@ -1,11 +1,7 @@
-import React, { Suspense, lazy } from 'react';
-
-const LazyAddStockScreen = lazy(() => import('@/screens/AddStockScreen'));
+import React from 'react';
+import AddStockScreen from '@/screens/AddStockScreen';
 
 export default function AddRoute() {
-  return (
-    <Suspense fallback={null}>
-      <LazyAddStockScreen />
-    </Suspense>
-  );
+  return <AddStockScreen />;
 }
+

@@ -152,7 +152,7 @@ try {
   const firebaseFirestore = firebaseFirestoreModule.default ?? firebaseFirestoreModule;
   const firebaseStorage = firebaseStorageModule.default ?? firebaseStorageModule;
 
-  app = firebaseApp.getApp ? firebaseApp.getApp() : firebaseAppModule.getApp();
+  app = firebaseApp;
   auth = wrapFirebaseFn(firebaseAuth, 'Firebase Auth');
   firestore = wrapFirestoreFn(firebaseFirestore);
   storage = wrapStorageFn(firebaseStorage);
@@ -161,3 +161,4 @@ try {
 }
 
 export { app, auth, firestore, storage };
+
