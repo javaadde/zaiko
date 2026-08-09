@@ -16,6 +16,7 @@ import {
 import {
   collection,
   doc,
+  getDocs,
   getFirestore,
   serverTimestamp,
   setDoc,
@@ -53,6 +54,8 @@ export type AuthActions = {
   refreshProfile: () => Promise<void>;
 };
 
+let googleSignInConfigured = false;
+
 export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
   status: 'loading',
   currentUser: null,
@@ -63,87 +66,22 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
   authError: null,
 
   initAuth: () => {
-    const unsub = onAuthStateChanged(auth, (fbUser) => {
+    if (!googleSignInConfigured) {
+      googleSignInConfigured = true;
       void (async () => {
         try {
-          if (!fbUser) {
-            set({
-              status: 'unauthenticated',
-              currentUser: null,
-              currentCompany: null,
-              currentEnvironment: null,
-              companies: [],
-              environments: [],
-              authError: null,
-            });
-            return;
-          }
+          const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
+          GoogleSignin.configure({ webClientId: googleWebClientId });
+          await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+        } catch {
+          // Google Sign-In config is best-effort; sign-in will still attempt.
+        }
+      })();
+    }
 
-          const userRef = doc(db, 'users', fbUser.uid);
-          const snap = await userRef.get();
-          const data = snap.data() ?? {};
-          const user: User = {
-            uid: fbUser.uid,
-            displayName: data.displayName ?? fbUser.displayName ?? 'User',
-            email: data.email ?? fbUser.email ?? '',
-            personalColor: data.personalColor ?? '#1F8A5B',
-            photoURL: data.photoURL ?? fbUser.photoURL ?? null,
-            phoneNumber: data.phoneNumber ?? fbUser.phoneNumber ?? null,
-            createdAt: data.createdAt?.toMillis() ?? Date.now(),
-            updatedAt: data.updatedAt?.toMillis() ?? Date.now(),
-            deletedAt: data.deletedAt?.toMillis() ?? null,
-          };
-
-          const companiesSnap = await collection(userRef, 'companies').get();
-          const companies: Company[] = companiesSnap.docs.map((d) => {
-            const c = d.data();
-            return {
-              id: d.id,
-              name: c.name ?? '',
-              slug: c.slug ?? '',
-              ownerId: c.ownerId ?? '',
-              members: c.members ?? [],
-              admins: c.admins ?? [],
-              createdAt: c.createdAt?.toMillis() ?? Date.now(),
-              updatedAt: c.updatedAt?.toMillis() ?? Date.now(),
-              deletedAt: c.deletedAt?.toMillis() ?? null,
-            };
-          });
-
-          const activeCompanyId = companies[0]?.id ?? null;
-          const activeCompany = companies.find((c) => c.id === activeCompanyId) ?? null;
-
-          let environments: Environment[] = [];
-          if (activeCompany) {
-            const envSnap = await collection(doc(db, 'companies', activeCompany.id), 'environments').get();
-            environments = envSnap.docs.map((d) => {
-              const e = d.data();
-              return {
-                id: d.id,
-                companyId: e.companyId ?? activeCompany.id,
-                name: e.name ?? '',
-                type: e.type ?? 'development',
-                members: e.members ?? [],
-                admins: e.admins ?? [],
-                createdAt: e.createdAt?.toMillis() ?? Date.now(),
-                updatedAt: e.updatedAt?.toMillis() ?? Date.now(),
-                deletedAt: e.deletedAt?.toMillis() ?? null,
-              };
-            });
-          }
-
-          const activeEnvironment = environments[0] ?? null;
-
-          set({
-            status: 'authenticated',
-            currentUser: user,
-            companies,
-            currentCompany: activeCompany,
-            environments,
-            currentEnvironment: activeEnvironment,
-            authError: null,
-          });
-        } catch (err) {
+    const unsub = onAuthStateChanged(auth, async (fbUser) => {
+      try {
+        if (!fbUser) {
           set({
             status: 'unauthenticated',
             currentUser: null,
@@ -151,10 +89,108 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
             currentEnvironment: null,
             companies: [],
             environments: [],
-            authError: getUserFriendlyError(err, 'Auth initialization failed'),
+            authError: null,
+          });
+          return;
+        }
+
+        const immediateUser: User = {
+          uid: fbUser.uid,
+          displayName: fbUser.displayName ?? 'User',
+          email: fbUser.email ?? '',
+          personalColor: '#1F8A5B',
+          photoURL: fbUser.photoURL ?? null,
+          phoneNumber: fbUser.phoneNumber ?? null,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          deletedAt: null,
+        };
+
+        set({
+          status: 'authenticated',
+          currentUser: immediateUser,
+          authError: null,
+        });
+
+        const userRef = doc(db, 'users', fbUser.uid);
+        const snap = await userRef.get();
+        const data = snap.data() ?? {};
+        const user: User = {
+          ...immediateUser,
+          displayName: data.displayName ?? immediateUser.displayName,
+          email: data.email ?? immediateUser.email,
+          personalColor: data.personalColor ?? immediateUser.personalColor,
+          photoURL: data.photoURL ?? immediateUser.photoURL,
+          phoneNumber: data.phoneNumber ?? immediateUser.phoneNumber,
+          createdAt: data.createdAt?.toMillis() ?? Date.now(),
+          updatedAt: data.updatedAt?.toMillis() ?? Date.now(),
+          deletedAt: data.deletedAt?.toMillis() ?? null,
+        };
+
+          const companiesSnap = await getDocs(collection(userRef, 'companies'));
+          const companies: Company[] = companiesSnap.docs.map((d) => {
+          const c = d.data();
+          return {
+            id: d.id,
+            name: c.name ?? '',
+            slug: c.slug ?? '',
+            ownerId: c.ownerId ?? '',
+            members: c.members ?? [],
+            admins: c.admins ?? [],
+            createdAt: c.createdAt?.toMillis() ?? Date.now(),
+            updatedAt: c.updatedAt?.toMillis() ?? Date.now(),
+            deletedAt: c.deletedAt?.toMillis() ?? null,
+          };
+        });
+
+        const activeCompanyId = companies[0]?.id ?? null;
+        const activeCompany = companies.find((c) => c.id === activeCompanyId) ?? null;
+
+        let environments: Environment[] = [];
+        if (activeCompany) {
+          // Security rules require membership-based filtering when listing environments.
+          // Query only environments where the current user is a member to satisfy rules.
+          const envSnap = await doc(db, 'companies', activeCompany.id)
+            .collection('environments')
+            .where('members', 'array-contains', fbUser.uid)
+            .get();
+          environments = envSnap.docs.map((d) => {
+            const e = d.data();
+            return {
+              id: d.id,
+              companyId: e.companyId ?? activeCompany.id,
+              name: e.name ?? '',
+              type: e.type ?? 'development',
+              members: e.members ?? [],
+              admins: e.admins ?? [],
+              createdAt: e.createdAt?.toMillis() ?? Date.now(),
+              updatedAt: e.updatedAt?.toMillis() ?? Date.now(),
+              deletedAt: e.deletedAt?.toMillis() ?? null,
+            };
           });
         }
-      })();
+
+        const activeEnvironment = environments[0] ?? null;
+
+        set({
+          currentUser: user,
+          companies,
+          currentCompany: activeCompany,
+          environments,
+          currentEnvironment: activeEnvironment,
+          authError: null,
+        });
+      } catch (err) {
+        set({
+          status: 'unauthenticated',
+          currentUser: null,
+          currentCompany: null,
+          currentEnvironment: null,
+          companies: [],
+          environments: [],
+          authError: getUserFriendlyError(err, 'Auth initialization failed'),
+        });
+      }
     });
 
     return unsub;
@@ -167,13 +203,31 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
         throw new Error('Google Sign-In requires a development build, not Expo Go.');
       }
       const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
-      GoogleSignin.configure({ webClientId: googleWebClientId });
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-      const response = await GoogleSignin.signIn();
-      if (!response.data?.idToken) {
-        throw new Error('Google Sign-In failed: no id token');
+      // Ensure configured in case initAuth's best-effort setup hasn't run yet
+      try {
+        GoogleSignin.configure({ webClientId: googleWebClientId });
+        await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      } catch {}
+      const signInResult: any = await GoogleSignin.signIn();
+      // Support multiple return shapes across library versions
+      let idToken: string | undefined = signInResult?.data?.idToken ?? signInResult?.idToken;
+      let accessToken: string | undefined = signInResult?.data?.accessToken ?? signInResult?.accessToken;
+      if ((!idToken || !accessToken) && typeof GoogleSignin.getTokens === 'function') {
+        try {
+          const tokens = await GoogleSignin.getTokens();
+          idToken = idToken ?? tokens?.idToken ?? undefined;
+          accessToken = accessToken ?? tokens?.accessToken ?? undefined;
+        } catch {}
       }
-      const credential = GoogleAuthProvider.credential(response.data.idToken);
+      if (!idToken && !accessToken) {
+        // Try a hard refresh of Google session once
+        try { await GoogleSignin.signOut(); } catch {}
+        const retry = await GoogleSignin.signIn();
+        idToken = retry?.data?.idToken ?? retry?.idToken ?? idToken;
+        accessToken = retry?.data?.accessToken ?? retry?.accessToken ?? accessToken;
+      }
+      if (!idToken && !accessToken) throw new Error('Google Sign-In failed: no id or access token');
+      const credential = GoogleAuthProvider.credential(idToken ?? undefined as any, accessToken ?? undefined as any);
       await signInWithCredential(auth, credential);
     } catch (err) {
       const message = getUserFriendlyError(err, 'Google Sign-In failed');
@@ -237,48 +291,53 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
     const companyRef = doc(collection(db, 'companies'));
     const companyId = companyRef.id;
 
-    const batch = writeBatch(db);
-    batch.set(companyRef, {
-      name,
-      slug,
-      ownerId: user.uid,
-      members: [user.uid],
-      admins: [user.uid],
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
+    try {
+      const batch = writeBatch(db);
+      batch.set(companyRef, {
+        name,
+        slug,
+        ownerId: user.uid,
+        members: [user.uid],
+        admins: [user.uid],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
 
-    batch.set(doc(db, 'users', user.uid, 'companies', companyId), {
-      name,
-      slug,
-      ownerId: user.uid,
-      members: [user.uid],
-      admins: [user.uid],
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
+      batch.set(doc(db, 'users', user.uid, 'companies', companyId), {
+        name,
+        slug,
+        ownerId: user.uid,
+        members: [user.uid],
+        admins: [user.uid],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
 
-    batch.set(doc(companyRef, 'environments', 'development'), {
-      companyId,
-      name: 'Development',
-      type: 'development',
-      members: [user.uid],
-      admins: [user.uid],
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
+      batch.set(doc(db, 'companies', companyId, 'environments', 'development'), {
+        companyId,
+        name: 'Development',
+        type: 'development',
+        members: [user.uid],
+        admins: [user.uid],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
 
-    batch.set(doc(companyRef, 'environments', 'production'), {
-      companyId,
-      name: 'Production',
-      type: 'production',
-      members: [user.uid],
-      admins: [user.uid],
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
+      batch.set(doc(db, 'companies', companyId, 'environments', 'production'), {
+        companyId,
+        name: 'Production',
+        type: 'production',
+        members: [user.uid],
+        admins: [user.uid],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
 
-    await batch.commit();
+      await batch.commit();
+    } catch (err) {
+      console.error('createCompany batch failed', err);
+      throw err;
+    }
 
     const company: Company = {
       id: companyId,
@@ -374,7 +433,13 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
     const company = get().companies.find((c) => c.id === companyId) ?? null;
     if (!company) return;
 
-    const envSnap = await collection(doc(db, 'companies', companyId), 'environments').get();
+    const user = get().currentUser;
+    if (!user) return;
+    // Match Firestore rules by filtering environments by membership.
+    const envSnap = await doc(db, 'companies', companyId)
+      .collection('environments')
+      .where('members', 'array-contains', user.uid)
+      .get();
 
     const environments: Environment[] = envSnap.docs.map((d) => {
       const e = d.data();

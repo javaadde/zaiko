@@ -1,6 +1,7 @@
 import { tsToMs, serverTs } from '@/lib/firestore';
 import type { Sale } from '@/types';
 import { useAuthStore } from '@/stores/auth-store';
+import { getDocs } from '@react-native-firebase/firestore';
 import { getEnvRef } from './inventory';
 
 export async function createSale(sale: Omit<Sale, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>) {
@@ -18,7 +19,7 @@ export async function createSale(sale: Omit<Sale, 'id' | 'createdAt' | 'updatedA
 }
 
 export async function getSales() {
-  const snap = await getEnvRef().collection('sales').orderBy('saleDate', 'desc').get();
+  const snap = await getDocs(getEnvRef().collection('sales').orderBy('saleDate', 'desc'));
   return snap.docs.map((d) => {
     const data = d.data();
     return {

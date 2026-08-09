@@ -9,14 +9,21 @@ import {
   StatusBar,
   Linking,
 } from 'react-native';
-import { ChevronRight, Archive } from 'lucide-react-native';
+import { ChevronRight, Archive, LogOut } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/hooks/use-theme';
+import { useAuthStore } from '@/stores/auth-store';
 import { APP_VERSION } from '@/lib/version';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const signOut = useAuthStore((s) => s.signOut);
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.replace('/auth');
+  };
 
   const openPortfolio = () => {
     Linking.openURL('https://javade.in');
@@ -71,6 +78,14 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
+        <TouchableOpacity
+          style={[styles.logoutBtn, { backgroundColor: '#FEE2E2' }]}
+          onPress={handleSignOut}
+        >
+          <LogOut size={20} color="#DC2626" />
+          <Text style={styles.logoutText}>Sign Out</Text>
+        </TouchableOpacity>
+
         <View style={styles.footer}>
           <Text style={[styles.madeBy, { color: colors.textMuted }]}>Made by @javaadde</Text>
           <TouchableOpacity style={styles.knowMoreBtn} onPress={openPortfolio}>
@@ -107,6 +122,8 @@ const styles = StyleSheet.create({
   salesContent: { flex: 1 },
   salesTitle: { fontSize: 16, fontWeight: '700' },
   salesSub: { fontSize: 13, fontWeight: '500', marginTop: 2 },
+  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 16, borderRadius: 16, marginBottom: 30 },
+  logoutText: { color: '#DC2626', fontSize: 16, fontWeight: '700' },
   footer: { marginTop: 60, alignItems: 'center', gap: 12 },
   madeBy: { fontSize: 14, fontWeight: '600' },
   knowMoreBtn: { paddingHorizontal: 24, paddingVertical: 16, borderRadius: 16, backgroundColor: '#F3F4F6', width: '100%', alignItems: 'center' },
