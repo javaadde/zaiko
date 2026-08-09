@@ -1,24 +1,25 @@
-let expoAvModule: any = null;
+let expoAudioModule: any = null;
 
-async function getExpoAvModule() {
-  if (expoAvModule) return expoAvModule;
+async function getExpoAudioModule() {
+  if (expoAudioModule) return expoAudioModule;
 
   try {
-    expoAvModule = await import('expo-av');
-    return expoAvModule;
+    expoAudioModule = await import('expo-audio');
+    return expoAudioModule;
   } catch {
     return null;
   }
 }
 
 export async function playSuccessSound() {
-  const { Audio } = (await getExpoAvModule()) ?? {};
-  if (!Audio?.Sound?.createAsync) return;
+  const { createAudioPlayer } = (await getExpoAudioModule()) ?? {};
+  if (!createAudioPlayer) return;
 
   try {
-    const { sound } = await Audio.Sound.createAsync(require('../../assets/sounds/success.mp3'));
-    await sound.playAsync();
+    const player = createAudioPlayer(require('../../assets/sounds/success.mp3'));
+    player.play();
   } catch {
     // no-op
   }
 }
+
