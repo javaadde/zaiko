@@ -1,67 +1,77 @@
 export const lightColors = {
-  primary: '#000000',
-  primaryLight: '#2D2D2D',
-  primaryDark: '#000000',
-  primaryGlow: 'rgba(0,0,0,0.05)',
-  accent: '#E63946',
-  accentLight: 'rgba(230, 57, 70, 0.1)',
-  bg: '#EFF6FF',
+  primary: '#18191E',
+  primaryLight: '#2D2F38',
+  primaryDark: '#0E0F13',
+  primaryGlow: 'rgba(243, 232, 121, 0.2)',
+  accent: '#F3E879', // Pastel Gold/Yellow from mockup
+  accentLight: 'rgba(243, 232, 121, 0.25)',
+  pastelYellow: '#F3E879',
+  pastelGreen: '#5EEA9A',
+  pastelPurple: '#9C8FFF',
+  pastelBlue: '#8C86FF',
+  bg: '#EBE8DB', // Warm soft olive beige from light mockup
   bgCard: '#FFFFFF',
-  bgCardAlt: '#F1F3F5',
+  bgCardAlt: '#F5F4EC',
   bgSurface: '#FFFFFF',
-  bgOverlay: 'rgba(255,255,255,0.9)',
-  success: '#10B981',
-  successLight: 'rgba(16, 185, 129, 0.1)',
-  warning: '#F59E0B',
-  warningLight: 'rgba(245, 158, 11, 0.1)',
-  danger: '#EF4444',
-  dangerLight: 'rgba(239, 68, 68, 0.1)',
-  textPrimary: '#121212',
-  textSecondary: '#6B7280',
-  textMuted: '#9CA3AF',
+  bgOverlay: 'rgba(255,255,255,0.92)',
+  bgPillBar: '#1C1D23', // Dark capsule floating bottom bar
+  success: '#5EEA9A',
+  successLight: 'rgba(94, 234, 154, 0.18)',
+  warning: '#F3E879',
+  warningLight: 'rgba(243, 232, 121, 0.2)',
+  danger: '#FF6B6B',
+  dangerLight: 'rgba(255, 107, 107, 0.15)',
+  textPrimary: '#18191E',
+  textSecondary: '#787D8A',
+  textMuted: '#A0A5B2',
   textInverse: '#FFFFFF',
-  border: 'rgba(0,0,0,0.05)',
+  border: 'rgba(0,0,0,0.06)',
   borderActive: 'rgba(0,0,0,0.15)',
-  gradPrimary: ['#222222', '#000000'],
-  gradAccent: ['#FF4D6D', '#E63946'],
+  gradPrimary: ['#282A33', '#18191E'],
+  gradAccent: ['#F6ED8F', '#F3E879'],
   gradCard: ['#FFFFFF', '#FFFFFF'],
   gradDanger: ['#FF6B6B', '#EE5253'],
-  gradSuccess: ['#20BF6B', '#10AC84'],
-  gradDash: ['#EFF6FF', '#DBEAFE'],
+  gradSuccess: ['#69F1A2', '#5EEA9A'],
+  gradDash: ['#EBE8DB', '#E4E0D2'],
 } as const;
 
 export const darkColors = {
   ...lightColors,
-  bg: '#0B1220',
-  bgCard: '#111827',
-  bgCardAlt: '#0F172A',
-  bgSurface: '#111827',
-  bgOverlay: 'rgba(17,24,39,0.9)',
-  textPrimary: '#F3F4F6',
-  textSecondary: '#9CA3AF',
-  textMuted: '#6B7280',
-  border: 'rgba(255,255,255,0.08)',
+  primary: '#FFFFFF',
+  primaryLight: '#E2E8F0',
+  primaryDark: '#FFFFFF',
+  primaryGlow: 'rgba(94, 234, 154, 0.15)',
+  bg: '#15171E', // Dark obsidian matte background
+  bgCard: '#23252E', // Dark slate rounded card background
+  bgCardAlt: '#2B2D37',
+  bgSurface: '#23252E',
+  bgOverlay: 'rgba(23, 25, 32, 0.95)',
+  bgPillBar: '#1C1D23',
+  textPrimary: '#FFFFFF',
+  textSecondary: '#8E95A5',
+  textMuted: '#5C6272',
+  textInverse: '#18191E',
+  border: 'rgba(255,255,255,0.07)',
   borderActive: 'rgba(255,255,255,0.18)',
-  primaryGlow: 'rgba(255,255,255,0.05)',
-  gradDash: ['#0B1220', '#111827'],
+  gradDash: ['#15171E', '#23252E'],
 } as const;
 
 export const accentPalettes = {
   emerald: {
-    light: { accent: '#10B981', accentLight: 'rgba(16,185,129,0.12)' },
-    dark: { accent: '#34D399', accentLight: 'rgba(52,211,153,0.14)' },
+    light: { accent: '#5EEA9A', accentLight: 'rgba(94,234,154,0.2)' },
+    dark: { accent: '#5EEA9A', accentLight: 'rgba(94,234,154,0.2)' },
   },
   ocean: {
-    light: { accent: '#3B82F6', accentLight: 'rgba(59,130,246,0.12)' },
-    dark: { accent: '#60A5FA', accentLight: 'rgba(96,165,250,0.14)' },
+    light: { accent: '#9C8FFF', accentLight: 'rgba(156,143,255,0.2)' },
+    dark: { accent: '#9C8FFF', accentLight: 'rgba(156,143,255,0.2)' },
   },
   amber: {
-    light: { accent: '#F59E0B', accentLight: 'rgba(245,158,11,0.12)' },
-    dark: { accent: '#FBBF24', accentLight: 'rgba(251,191,36,0.14)' },
+    light: { accent: '#F3E879', accentLight: 'rgba(243,232,121,0.25)' },
+    dark: { accent: '#F3E879', accentLight: 'rgba(243,232,121,0.25)' },
   },
   rose: {
-    light: { accent: '#E63946', accentLight: 'rgba(230,57,70,0.12)' },
-    dark: { accent: '#FB7185', accentLight: 'rgba(251,113,133,0.14)' },
+    light: { accent: '#FF6B6B', accentLight: 'rgba(255,107,107,0.2)' },
+    dark: { accent: '#FF6B6B', accentLight: 'rgba(255,107,107,0.2)' },
   },
 } as const;
 
@@ -79,20 +89,21 @@ export const spacing = {
 export type SpacingKey = keyof typeof spacing;
 
 export const radii = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
+  sm: 10,
+  md: 16,
+  lg: 20,
+  xl: 28,
+  card: 28,
   full: 9999,
-  medium: 12,
-  large: 16,
+  medium: 16,
+  large: 28,
 } as const;
 
 export type RadiiKey = keyof typeof radii;
 
 export const cornerPresets = {
-  standard: { card: 16, md: 12, sm: 8, pill: 9999 },
-  rounded: { card: 24, md: 16, sm: 12, pill: 9999 },
+  standard: { card: 28, md: 16, sm: 10, pill: 9999 },
+  rounded: { card: 32, md: 20, sm: 12, pill: 9999 },
   pill: { card: 9999, md: 9999, sm: 9999, pill: 9999 },
 } as const;
 
@@ -100,25 +111,25 @@ export type CornerPreset = keyof typeof cornerPresets;
 
 export const shadows = {
   card: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   float: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.16,
+    shadowRadius: 24,
+    elevation: 8,
   },
 } as const;
 
 export type ShadowStyle = typeof shadows.card;
 
 export const typeScale = {
-  largeTitle: { fontSize: 32, fontWeight: '800' as const, lineHeight: 38 },
+  largeTitle: { fontSize: 34, fontWeight: '800' as const, lineHeight: 40 },
   title: { fontSize: 24, fontWeight: '700' as const, lineHeight: 30 },
   headline: { fontSize: 20, fontWeight: '700' as const, lineHeight: 26 },
   body: { fontSize: 16, fontWeight: '500' as const, lineHeight: 22 },
@@ -142,11 +153,16 @@ export type ThemeColors = {
   primaryGlow: string;
   accent: string;
   accentLight: string;
+  pastelYellow: string;
+  pastelGreen: string;
+  pastelPurple: string;
+  pastelBlue: string;
   bg: string;
   bgCard: string;
   bgCardAlt: string;
   bgSurface: string;
   bgOverlay: string;
+  bgPillBar: string;
   success: string;
   successLight: string;
   warning: string;

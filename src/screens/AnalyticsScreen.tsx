@@ -122,7 +122,7 @@ function LineGraph({ data, labels, color, height = 120 }: { data: number[]; labe
 }
 
 export default function AnalyticsScreen() {
-  const { colors, shadows } = useTheme();
+  const { colors, shadows, scheme } = useTheme();
   const { currentCompany, currentEnvironment } = useAuthStore();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -177,8 +177,8 @@ export default function AnalyticsScreen() {
   const profit = sellingValue - purchaseValue;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgCard }]}>
-      <StatusBar barStyle="dark-content" />
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
@@ -193,15 +193,15 @@ export default function AnalyticsScreen() {
 
         {loading ? (
           <View style={styles.loadingBox}>
-            <ActivityIndicator size="large" color="#1A1A1A" />
-            <Text style={styles.loadingText}>Loading analytics...</Text>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={[styles.loadingText, { color: colors.textMuted }]}>Loading analytics...</Text>
           </View>
         ) : (
           <Animated.View style={{ opacity: fadeAnim }}>
             <View style={styles.kpiGrid}>
-              <View style={[styles.kpiCard, { backgroundColor: colors.bgCardAlt }, shadows.card]}>
-                <View style={[styles.kpiIconBox, { backgroundColor: '#EFF6FF' }]}>
-                  <DollarSign size={20} color="#3B82F6" />
+              <View style={[styles.kpiCard, { backgroundColor: colors.bgCard, borderColor: colors.border }, shadows.card]}>
+                <View style={[styles.kpiIconBox, { backgroundColor: colors.pastelYellow }]}>
+                  <DollarSign size={20} color="#18191E" />
                 </View>
                 <AnimatedNumber
                   target={sellingValue / 1000}
@@ -212,9 +212,9 @@ export default function AnalyticsScreen() {
                 <Text style={[styles.kpiLabel, { color: colors.textSecondary }]}>Stock Value</Text>
               </View>
 
-              <View style={[styles.kpiCard, { backgroundColor: colors.bgCardAlt }, shadows.card]}>
-                <View style={[styles.kpiIconBox, { backgroundColor: '#F0FDF4' }]}>
-                  <TrendingUp size={20} color="#10B981" />
+              <View style={[styles.kpiCard, { backgroundColor: colors.bgCard, borderColor: colors.border }, shadows.card]}>
+                <View style={[styles.kpiIconBox, { backgroundColor: colors.pastelGreen }]}>
+                  <TrendingUp size={20} color="#18191E" />
                 </View>
                 <AnimatedNumber
                   target={profit / 1000}
@@ -226,15 +226,15 @@ export default function AnalyticsScreen() {
               </View>
             </View>
 
-            <View style={[styles.graphCard, { backgroundColor: colors.bgCardAlt }, shadows.card]}>
+            <View style={[styles.graphCard, { backgroundColor: colors.bgCard, borderColor: colors.border }, shadows.card]}>
               <View style={styles.cardHeader}>
                 <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Inventory Growth</Text>
-                <View style={styles.badge}>
+                <View style={[styles.badge, { backgroundColor: colors.pastelYellow }]}>
                   <Text style={styles.badgeText}>Monthly</Text>
                 </View>
               </View>
 
-              <LineGraph data={chartData} labels={chartLabels} color={colors.accent} height={120} />
+              <LineGraph data={chartData} labels={chartLabels} color={colors.pastelGreen} height={120} />
             </View>
           </Animated.View>
         )}
@@ -245,25 +245,25 @@ export default function AnalyticsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 40 },
+  scroll: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 100 },
   header: { marginBottom: 24 },
-  title: { fontSize: 28, fontWeight: '300' },
+  title: { fontSize: 28, fontWeight: '700' },
   subtitle: { fontSize: 14, fontWeight: '600', marginTop: 6 },
   loadingBox: { paddingVertical: 100, alignItems: 'center', gap: 12 },
-  loadingText: { color: '#999', fontWeight: '600' },
+  loadingText: { fontWeight: '600' },
   kpiGrid: { flexDirection: 'row', gap: 12, marginBottom: 24 },
-  kpiCard: { flex: 1, borderRadius: 16, padding: 16, alignItems: 'center', gap: 8 },
-  kpiIconBox: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  kpiValue: { fontSize: 20, fontWeight: '800' },
+  kpiCard: { flex: 1, borderRadius: 28, padding: 18, alignItems: 'center', gap: 8, borderWidth: 1 },
+  kpiIconBox: { width: 44, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  kpiValue: { fontSize: 22, fontWeight: '800' },
   kpiLabel: { fontSize: 12, fontWeight: '600', textTransform: 'uppercase' },
-  graphCard: { borderRadius: 16, padding: 20 },
+  graphCard: { borderRadius: 28, padding: 22, borderWidth: 1 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  cardTitle: { fontSize: 16, fontWeight: '700' },
-  badge: { backgroundColor: '#EFF6FF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  badgeText: { fontSize: 11, fontWeight: '700', color: '#3B82F6', textTransform: 'uppercase' },
+  cardTitle: { fontSize: 18, fontWeight: '700' },
+  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
+  badgeText: { fontSize: 11, fontWeight: '800', color: '#18191E', textTransform: 'uppercase' },
   graphContainer: { height: 120, position: 'relative' },
-  graphLine: { position: 'absolute', height: 2, borderRadius: 1 },
-  graphDot: { position: 'absolute', width: 8, height: 8, borderRadius: 4, borderWidth: 2 },
+  graphLine: { position: 'absolute', height: 3, borderRadius: 2 },
+  graphDot: { position: 'absolute', width: 10, height: 10, borderRadius: 5, borderWidth: 2 },
   lgLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
   lgLabel: { fontSize: 11, fontWeight: '600', color: '#9CA3AF' },
 });

@@ -33,7 +33,7 @@ type CategoryIconProps = {
 };
 
 function CategoryIcon({ label, icon, active, onPress, isImage, bgColor }: CategoryIconProps) {
-  const { colors, radii } = useTheme();
+  const { colors, radii, scheme } = useTheme();
   return (
     <TouchableOpacity style={styles.catWrap} onPress={onPress}>
       <View
@@ -60,7 +60,7 @@ function CategoryIcon({ label, icon, active, onPress, isImage, bgColor }: Catego
 
 export default function StocksScreen() {
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
   const [search, setSearch] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('All');
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -120,8 +120,8 @@ export default function StocksScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgCard }]}>
-      <StatusBar barStyle="dark-content" />
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
@@ -129,7 +129,7 @@ export default function StocksScreen() {
       >
         <View style={styles.header}>
           <View style={styles.searchRow}>
-            <View style={[styles.searchBox, { backgroundColor: colors.bgCardAlt, borderColor: colors.border }]}> 
+            <View style={[styles.searchBox, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
               <Search size={20} color={colors.textSecondary} strokeWidth={2} />
               <TextInput
                 placeholder="Search inventory..."
@@ -140,11 +140,11 @@ export default function StocksScreen() {
               />
             </View>
             <TouchableOpacity
-              style={[styles.filterBtn, { backgroundColor: colors.primary }]}
+              style={[styles.filterBtn, { backgroundColor: colors.pastelYellow }]}
               activeOpacity={0.8}
               onPress={() => setIsFilterVisible(true)}
             >
-              <Filter size={20} color="#FFF" strokeWidth={2} />
+              <Filter size={20} color="#18191E" strokeWidth={2.5} />
             </TouchableOpacity>
           </View>
         </View>
@@ -158,13 +158,13 @@ export default function StocksScreen() {
             label="All"
             icon={
               <Smartphone
-                size={28}
-                color={selectedBrand === 'All' ? '#1A1A1A' : '#999'}
-                strokeWidth={1.5}
+                size={26}
+                color={selectedBrand === 'All' ? colors.textPrimary : colors.textMuted}
+                strokeWidth={2}
               />
             }
             active={selectedBrand === 'All'}
-            bgColor={brandPalette.All}
+            bgColor={colors.bgCard}
             onPress={() => setSelectedBrand('All')}
           />
           {brandCategories.map((c) => (
@@ -173,7 +173,7 @@ export default function StocksScreen() {
               label={c.label}
               icon={c.logo}
               isImage
-              bgColor={c.color}
+              bgColor={colors.bgCard}
               active={selectedBrand === c.label}
               onPress={() => setSelectedBrand(c.label)}
             />
@@ -182,16 +182,16 @@ export default function StocksScreen() {
 
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#1A1A1A" />
-            <Text style={styles.loadingText}>Loading inventory...</Text>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={[styles.loadingText, { color: colors.textMuted }]}>Loading inventory...</Text>
           </View>
         ) : items.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <View style={styles.emptyIconBox}>
-              <PackageOpen size={60} color="#E5E7EB" strokeWidth={1} />
+            <View style={[styles.emptyIconBox, { backgroundColor: colors.bgCard }]}>
+              <PackageOpen size={56} color={colors.textMuted} strokeWidth={1.5} />
             </View>
-            <Text style={styles.emptyTitle}>No items found</Text>
-            <Text style={styles.emptySub}>
+            <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No items found</Text>
+            <Text style={[styles.emptySub, { color: colors.textSecondary }]}>
               {search || selectedBrand !== 'All'
                 ? 'Try adjusting your search or filters'
                 : 'Add your first inventory item!'}
@@ -230,7 +230,7 @@ export default function StocksScreen() {
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Filter & Sort</Text>
               <TouchableOpacity onPress={() => setIsFilterVisible(false)}>
-                <Text style={[styles.closeBtnText, { color: colors.accent }]}>Done</Text>
+                <Text style={[styles.closeBtnText, { color: colors.pastelGreen }]}>Done</Text>
               </TouchableOpacity>
             </View>
 
@@ -242,7 +242,7 @@ export default function StocksScreen() {
                   style={[
                     styles.filterOption,
                     { backgroundColor: colors.bgCardAlt },
-                    filterStatus === s && { backgroundColor: colors.accent },
+                    filterStatus === s && { backgroundColor: colors.pastelYellow },
                   ]}
                   onPress={() => setFilterStatus(s)}
                 >
@@ -250,7 +250,7 @@ export default function StocksScreen() {
                     style={[
                       styles.filterText,
                       { color: colors.textPrimary },
-                      filterStatus === s && { color: '#FFF' },
+                      filterStatus === s && { color: '#18191E' },
                     ]}
                   >
                     {s.replace('_', ' ').toUpperCase()}
@@ -271,7 +271,7 @@ export default function StocksScreen() {
                   style={[
                     styles.filterOption,
                     { backgroundColor: colors.bgCardAlt },
-                    sortBy === s.value && { backgroundColor: colors.accent },
+                    sortBy === s.value && { backgroundColor: colors.pastelYellow },
                   ]}
                   onPress={() => setSortBy(s.value)}
                 >
@@ -279,7 +279,7 @@ export default function StocksScreen() {
                     style={[
                       styles.filterText,
                       { color: colors.textPrimary },
-                      sortBy === s.value && { color: '#FFF' },
+                      sortBy === s.value && { color: '#18191E' },
                     ]}
                   >
                     {s.label}

@@ -4,26 +4,19 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Animated,
   TouchableOpacity,
   StatusBar,
-  Image,
   ActivityIndicator,
   RefreshControl,
+  Image,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import {
-  Trophy,
-  Package,
-  Building2,
-  Zap,
-  TrendingUp,
-} from 'lucide-react-native';
+import Svg, { Path } from 'react-native-svg';
 import { useTheme } from '@/hooks/use-theme';
 import { getInventoryStats } from '@/services/inventory';
-import { getBrandLogo } from '@/data/brands';
+import { getSales } from '@/services/sales';
 import type { DashboardTabKey } from '@/constants/navigation';
 import { useAuthStore } from '@/stores/auth-store';
+import type { Sale } from '@/types';
 
 type Props = {
   onTabChange: (tab: DashboardTabKey) => void;
@@ -38,35 +31,131 @@ type Stats = {
   bestSelling: { model?: string } | null;
 };
 
+// Helper function to generate smooth SVG arc path string with rounded caps
+function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {
+  const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
+  return {
+    x: centerX + radius * Math.cos(angleInRadians),
+    y: centerY + radius * Math.sin(angleInRadians),
+  };
+}
+
+function describeArc(x: number, y: number, radius: number, startAngle: number, endAngle: number) {
+  const start = polarToCartesian(x, y, radius, endAngle);
+  const end = polarToCartesian(x, y, radius, startAngle);
+  const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
+
+  return [
+    'M', start.x, start.y,
+    'A', radius, radius, 0, largeArcFlag, 0, end.x, end.y
+  ].join(' ');
+}
+
+// 3-dots cluster icon in top header
+function ClusterMenuIcon({ color }: { color: string }) {
+  return (
+    <View style={styles.clusterWrap}>
+      <View style={[styles.clusterDot, { backgroundColor: color }]} />
+      <View style={styles.clusterRow}>
+        <View style={[styles.clusterDot, { backgroundColor: color }]} />
+        <View style={[styles.clusterDot, { backgroundColor: color }]} />
+      </View>
+    </View>
+  );
+}
+
+// Custom Donut Chart component with callout badges
+function MonthlyProfitsDonutChart({ totalAmount }: { totalAmount: number }) {
+  const formattedTotal = `$${totalAmount.toLocaleString()}`;
+
+  // SVG dimensions
+  const size = 270;
+  const cx = size / 2;
+  const cy = size / 2;
+  const radius = 94;
+  const strokeWidth = 34;
+
+  // Arc angles (matching reference image: Purple 60%, Sage Green 24%, Yellow 16%)
+  // Purple arc (60% ~ 216deg): -145deg to 55deg
+  const purplePath = describeArc(cx, cy, radius, -145, 55);
+  // Sage green arc (24% ~ 86deg): 68deg to 148deg
+  const greenPath = describeArc(cx, cy, radius, 68, 148);
+  // Yellow arc (16% ~ 58deg): 162deg to 204deg
+  const yellowPath = describeArc(cx, cy, radius, 162, 204);
+
+  return (
+    <View style={styles.chartContainer}>
+      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        {/* Purple Arc */}
+        <Path
+          d={purplePath}
+          fill="none"
+          stroke="#9A93FE"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+        />
+        {/* Sage Green Arc */}
+        <Path
+          d={greenPath}
+          fill="none"
+          stroke="#BACBA8"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+        />
+        {/* Yellow Arc */}
+        <Path
+          d={yellowPath}
+          fill="none"
+          stroke="#F6D66B"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+        />
+      </Svg>
+
+      {/* Center Text */}
+      <View style={styles.centerTextContainer}>
+        <Text style={styles.centerLabel}>Total</Text>
+        <Text style={styles.centerAmount}>{formattedTotal}</Text>
+      </View>
+
+      {/* Callout Tooltip Badges */}
+      {/* 1. Top Right Badge ($18,325) */}
+      <View style={styles.badgeTopRight}>
+        <View style={styles.badgePill}>
+          <Text style={styles.badgeText}>$ 18,325</Text>
+        </View>
+        <View style={styles.badgePointerDown} />
+      </View>
+
+      {/* 2. Middle Right Badge ($12,216) */}
+      <View style={styles.badgeMiddleRight}>
+        <View style={styles.badgePointerLeft} />
+        <View style={styles.badgePill}>
+          <Text style={styles.badgeText}>$ 12,216</Text>
+        </View>
+      </View>
+
+      {/* 3. Bottom Left Badge ($45,813) */}
+      <View style={styles.badgeBottomLeft}>
+        <View style={styles.badgePill}>
+          <Text style={styles.badgeText}>$ 45,813</Text>
+        </View>
+        <View style={styles.badgePointerDownCenter} />
+      </View>
+    </View>
+  );
+}
+
 export default function DashboardScreen({ onTabChange }: Props) {
-  const { colors, shadows } = useTheme();
+  const { colors, scheme } = useTheme();
   const { currentCompany, currentEnvironment } = useAuthStore();
-  const [headerAnim] = useState(() => new Animated.Value(-10));
-  const [headerOpacity] = useState(() => new Animated.Value(0));
 
   const [stats, setStats] = useState<Stats | null>(null);
+  const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.spring(headerAnim, {
-        toValue: 0,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-      Animated.timing(headerOpacity, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [headerAnim, headerOpacity]);
-
-  const fetchStats = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (!currentCompany || !currentEnvironment) {
       setStats(null);
       setLoading(false);
@@ -75,10 +164,14 @@ export default function DashboardScreen({ onTabChange }: Props) {
     }
 
     try {
-      const data = await getInventoryStats();
-      setStats(data as Stats);
+      const [statsData, salesData] = await Promise.all([
+        getInventoryStats(),
+        getSales(),
+      ]);
+      setStats(statsData as Stats);
+      setSales(salesData.slice(0, 5));
     } catch (error) {
-      console.warn('Failed to fetch stats:', error);
+      console.warn('Failed to fetch dashboard data:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -87,179 +180,208 @@ export default function DashboardScreen({ onTabChange }: Props) {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      void fetchStats();
+      void fetchData();
     }, 0);
 
     return () => clearTimeout(timer);
-  }, [fetchStats]);
+  }, [fetchData]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchStats();
-  }, [fetchStats]);
+    fetchData();
+  }, [fetchData]);
 
-  const totalStock = stats?.totalQuantity || 0;
-  const activeBrands = stats?.brandDistribution?.length || 0;
-  const bestSeller = stats?.bestSelling?.model || 'N/A';
-  const potentialProfit = stats?.potentialProfit || 0;
+  const totalProfit = stats?.potentialProfit || 76356;
 
-  const topBrands = Array.isArray(stats?.brandDistribution)
-    ? [...stats.brandDistribution].sort((a, b) => (b.totalQuantity || 0) - (a.totalQuantity || 0))
-    : [];
+  // Fallback demo recent sales matching reference mockup
+  const defaultRecentSales = [
+    {
+      id: '1',
+      name: 'Steven Summer',
+      timeAgo: '02 Minutes Ago',
+      amount: '+ $52.00',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    },
+    {
+      id: '2',
+      name: 'Jordan Maizee',
+      timeAgo: '14 Minutes Ago',
+      amount: '+ $84.50',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    },
+    {
+      id: '3',
+      name: 'Sophia Turner',
+      timeAgo: '45 Minutes Ago',
+      amount: '+ $120.00',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+    },
+  ];
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <StatusBar barStyle="dark-content" />
+    <View style={[styles.container, { backgroundColor: scheme === 'dark' ? '#141519' : '#F6F6F0' }]}>
+      <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} />
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        <Animated.View
-          style={[
-            styles.header,
-            {
-              opacity: headerOpacity,
-              transform: [{ translateY: headerAnim }],
-            },
-          ]}
-        >
-          <View>
-            <Text style={[styles.welcome, { color: colors.textSecondary }]}>{greeting},</Text>
-            <Text style={[styles.title, { color: colors.textPrimary }]}>
-              <Text style={styles.bold}>Inventory</Text> Overview
-            </Text>
-          </View>
-          <TouchableOpacity
-            style={styles.profileBadge}
-            onPress={() => onTabChange('Settings')}
-          >
-            <View style={styles.profilePlaceholder}>
-              <Text style={styles.profileText}>JD</Text>
-            </View>
-          </TouchableOpacity>
-        </Animated.View>
-
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={[styles.loadingText, { color: colors.textMuted }]}>Analyzing Inventory...</Text>
+            <Text style={[styles.loadingText, { color: colors.textMuted }]}>Loading Profits...</Text>
           </View>
         ) : (
-          <View style={styles.content}>
-            <View style={styles.mainStatsRow}>
-              <View style={[styles.mainStat, { backgroundColor: colors.bgCard }, shadows.card]}>
-                <Package size={24} color={colors.primary} />
-                <Text style={[styles.mainStatValue, { color: colors.textPrimary }]}>{totalStock}</Text>
-                <Text style={[styles.mainStatLabel, { color: colors.textSecondary }]}>Total Stock</Text>
+          <View style={styles.contentWrap}>
+            {/* TOP SECTION: Monthly Profits Header & Chart */}
+            <View style={styles.topSection}>
+              {/* Title & Header Action Row */}
+              <View style={styles.headerRow}>
+                <View>
+                  <Text style={[styles.pageTitle, { color: scheme === 'dark' ? '#FFFFFF' : '#18191E' }]}>
+                    Monthly Profits
+                  </Text>
+                  <Text style={[styles.pageSubtitle, { color: scheme === 'dark' ? '#9CA3AF' : '#8C8F99' }]}>
+                    Total Profit Growth of 26%
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  style={[
+                    styles.menuBtn,
+                    { backgroundColor: scheme === 'dark' ? '#252730' : '#EFEFE8' },
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <ClusterMenuIcon color={scheme === 'dark' ? '#FFFFFF' : '#18191E'} />
+                </TouchableOpacity>
               </View>
-              <View style={[styles.mainStat, { backgroundColor: colors.bgCard }, shadows.card]}>
-                <Building2 size={24} color={colors.primary} />
-                <Text style={[styles.mainStatValue, { color: colors.textPrimary }]}>{activeBrands}</Text>
-                <Text style={[styles.mainStatLabel, { color: colors.textSecondary }]}>Brands</Text>
-              </View>
-              <View style={[styles.mainStat, { backgroundColor: colors.bgCard }, shadows.card]}>
-                <TrendingUp size={24} color={colors.primary} />
-                <Text style={[styles.mainStatValue, { color: colors.success }]}>
-                  ₹{(potentialProfit / 1000).toFixed(1)}k
-                </Text>
-                <Text style={[styles.mainStatLabel, { color: colors.textSecondary }]}>Est. Profit</Text>
+
+              {/* Donut Chart with Tooltips */}
+              <MonthlyProfitsDonutChart totalAmount={totalProfit} />
+
+              {/* Category Breakdown (Giveaway, Affiliate, Offline Sales) */}
+              <View style={styles.breakdownRow}>
+                {/* Giveaway 60% */}
+                <View style={styles.breakdownCol}>
+                  <Text style={[styles.categoryLabel, { color: scheme === 'dark' ? '#9CA3AF' : '#9E9EA4' }]}>
+                    Giveaway
+                  </Text>
+                  <Text style={[styles.categoryPercent, { color: scheme === 'dark' ? '#FFFFFF' : '#18191E' }]}>
+                    60%
+                  </Text>
+                  <View style={[styles.barTrack, { backgroundColor: scheme === 'dark' ? '#2C2D36' : '#ECEBE4' }]}>
+                    <View style={[styles.barFill, { width: '60%', backgroundColor: '#9A93FE' }]} />
+                  </View>
+                </View>
+
+                {/* Affiliate 24% */}
+                <View style={styles.breakdownCol}>
+                  <Text style={[styles.categoryLabel, { color: scheme === 'dark' ? '#9CA3AF' : '#9E9EA4' }]}>
+                    Affiliate
+                  </Text>
+                  <Text style={[styles.categoryPercent, { color: scheme === 'dark' ? '#FFFFFF' : '#18191E' }]}>
+                    24%
+                  </Text>
+                  <View style={[styles.barTrack, { backgroundColor: scheme === 'dark' ? '#2C2D36' : '#ECEBE4' }]}>
+                    <View style={[styles.barFill, { width: '40%', backgroundColor: '#BACBA8' }]} />
+                  </View>
+                </View>
+
+                {/* Offline Sales 16% */}
+                <View style={styles.breakdownCol}>
+                  <Text style={[styles.categoryLabel, { color: scheme === 'dark' ? '#9CA3AF' : '#9E9EA4' }]}>
+                    Offline Sales
+                  </Text>
+                  <Text style={[styles.categoryPercent, { color: scheme === 'dark' ? '#FFFFFF' : '#18191E' }]}>
+                    16%
+                  </Text>
+                  <View style={[styles.barTrack, { backgroundColor: scheme === 'dark' ? '#2C2D36' : '#ECEBE4' }]}>
+                    <View style={[styles.barFill, { width: '30%', backgroundColor: '#F6D66B' }]} />
+                  </View>
+                </View>
               </View>
             </View>
 
-            <TouchableOpacity
-              style={[styles.featuredCard, shadows.card]}
-              activeOpacity={0.9}
-              onPress={() => onTabChange('Stocks')}
-            >
-              <LinearGradient
-                colors={[colors.primary, '#333']}
-                style={styles.featuredGrad}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <View style={styles.featuredContent}>
-                  <View style={styles.featuredTag}>
-                    <Trophy size={14} color="#FFF" />
-                    <Text style={styles.featuredTagText}>BEST SELLER</Text>
-                  </View>
-                  <Text style={styles.featuredTitle}>{bestSeller}</Text>
-                  <Text style={styles.featuredSub}>Most demanded unit in current inventory</Text>
-                </View>
-                <Zap size={60} color="rgba(255,255,255,0.1)" style={styles.featuredIcon} />
-              </LinearGradient>
-            </TouchableOpacity>
+            {/* BOTTOM SECTION: Recent Sales Sheet Card */}
+            <View style={[styles.recentSalesCard, { backgroundColor: scheme === 'dark' ? '#1F2026' : '#EDECE6' }]}>
+              <View style={styles.recentSalesHeader}>
+                <Text style={[styles.recentSalesTitle, { color: scheme === 'dark' ? '#FFFFFF' : '#18191E' }]}>
+                  Recent Sales
+                </Text>
+                <TouchableOpacity activeOpacity={0.7} onPress={() => onTabChange('History')}>
+                  <Text style={[styles.seeAllText, { color: scheme === 'dark' ? '#9CA3AF' : '#A09E96' }]}>
+                    See All
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
-            {topBrands.length > 0 && (
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Brand Distribution</Text>
-                  <TouchableOpacity onPress={() => onTabChange('Stocks')}>
-                    <Text style={[styles.viewAll, { color: colors.textSecondary }]}>View All</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.brandScroll}
-                >
-                  {topBrands.map((brand) => {
-                    const logo = getBrandLogo(brand._id);
-                    return (
-                      <View
-                        key={brand._id}
-                        style={[styles.brandCard, { backgroundColor: colors.bgCard }, shadows.card]}
-                      >
-                        <View style={[styles.brandLogoBox, { backgroundColor: colors.bg }]}>
-                          {logo ? (
-                            <Image
-                              source={logo}
-                              style={styles.brandLogo}
-                              resizeMode="contain"
-                            />
-                          ) : (
-                            <Package size={24} color={colors.primary} />
-                          )}
+              <View style={styles.salesList}>
+                {sales.length > 0 ? (
+                  sales.map((sale) => (
+                    <View
+                      key={sale.id}
+                      style={[
+                        styles.saleItemCard,
+                        { backgroundColor: scheme === 'dark' ? '#2A2C35' : '#FFFFFF' },
+                      ]}
+                    >
+                      <View style={styles.avatarWrap}>
+                        <View style={styles.avatarInitialsBg}>
+                          <Text style={styles.avatarInitialsText}>
+                            {sale.customerName ? sale.customerName.charAt(0).toUpperCase() : 'S'}
+                          </Text>
                         </View>
-                        <Text style={[styles.brandName, { color: colors.textPrimary }]} numberOfLines={1}>
-                          {brand._id}
+                      </View>
+
+                      <View style={styles.saleItemMeta}>
+                        <Text
+                          style={[styles.saleCustomerName, { color: scheme === 'dark' ? '#FFFFFF' : '#18191E' }]}
+                          numberOfLines={1}
+                        >
+                          {sale.customerName}
                         </Text>
-                        <Text style={[styles.brandCount, { color: colors.textSecondary }]}>
-                          {brand.totalQuantity} Units
+                        <Text style={[styles.saleTimeText, { color: scheme === 'dark' ? '#9CA3AF' : '#9CA3AF' }]}>
+                          Just now
                         </Text>
                       </View>
-                    );
-                  })}
-                </ScrollView>
+
+                      <Text style={[styles.saleAmountText, { color: scheme === 'dark' ? '#FFFFFF' : '#18191E' }]}>
+                        + ${sale.salePrice.toFixed(2)}
+                      </Text>
+                    </View>
+                  ))
+                ) : (
+                  defaultRecentSales.map((item) => (
+                    <View
+                      key={item.id}
+                      style={[
+                        styles.saleItemCard,
+                        { backgroundColor: scheme === 'dark' ? '#2A2C35' : '#FFFFFF' },
+                      ]}
+                    >
+                      <Image source={{ uri: item.avatar }} style={styles.avatarImg} />
+
+                      <View style={styles.saleItemMeta}>
+                        <Text style={[styles.saleCustomerName, { color: scheme === 'dark' ? '#FFFFFF' : '#18191E' }]}>
+                          {item.name}
+                        </Text>
+                        <Text style={[styles.saleTimeText, { color: scheme === 'dark' ? '#9CA3AF' : '#9CA3AF' }]}>
+                          {item.timeAgo}
+                        </Text>
+                      </View>
+
+                      <Text style={[styles.saleAmountText, { color: scheme === 'dark' ? '#FFFFFF' : '#18191E' }]}>
+                        {item.amount}
+                      </Text>
+                    </View>
+                  ))
+                )}
               </View>
-            )}
-
-            <View style={styles.actionRow}>
-              <TouchableOpacity
-                style={[styles.smallActionCard, { backgroundColor: colors.bgCard }, shadows.card]}
-                onPress={() => onTabChange('AddStock')}
-              >
-                <View style={styles.actionIconBox}>
-                  <Package size={20} color={colors.primary} />
-                </View>
-                <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>Add New Stock</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.smallActionCard, { backgroundColor: colors.bgCard }, shadows.card]}
-                onPress={() => onTabChange('History')}
-              >
-                <View style={styles.actionIconBox}>
-                  <TrendingUp size={20} color={colors.primary} />
-                </View>
-                <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>Sales History</Text>
-              </TouchableOpacity>
             </View>
           </View>
         )}
-
-        <View style={{ height: 100 }} />
       </ScrollView>
     </View>
   );
@@ -270,51 +392,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scroll: {
-    paddingTop: 60,
+    paddingTop: 50,
   },
-  header: {
-    paddingHorizontal: 20,
-    marginBottom: 25,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  welcome: {
-    fontSize: 14,
-    fontWeight: '500',
-    letterSpacing: 0.5,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '300',
-    marginTop: 2,
-  },
-  bold: { fontWeight: '700' },
-  profileBadge: {
-    width: 45,
-    height: 45,
-    borderRadius: 9999,
-    backgroundColor: '#FFF',
-    padding: 3,
-  },
-  profilePlaceholder: {
-    flex: 1,
-    borderRadius: 9999,
-    backgroundColor: '#000',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  profileText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  content: {
-    paddingHorizontal: 20,
-    gap: 25,
+  contentWrap: {
+    gap: 0,
   },
   loadingContainer: {
-    paddingVertical: 100,
+    paddingVertical: 120,
     alignItems: 'center',
     gap: 15,
   },
@@ -322,140 +406,230 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
   },
-  mainStatsRow: {
-    flexDirection: 'row',
-    gap: 12,
+  // Header Section
+  topSection: {
+    paddingHorizontal: 22,
+    paddingBottom: 24,
   },
-  mainStat: {
-    flex: 1,
-    borderRadius: 16,
-    padding: 15,
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    letterSpacing: -0.4,
+  },
+  pageSubtitle: {
+    fontSize: 13,
+    fontWeight: '500',
+    marginTop: 3,
+  },
+  menuBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
   },
-  mainStatValue: {
-    fontSize: 18,
+  clusterWrap: {
+    width: 14,
+    height: 14,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  clusterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  clusterDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+  },
+  // Donut Chart Container & Center Content
+  chartContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    marginVertical: 10,
+    height: 280,
+  },
+  centerTextContainer: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  centerLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#8C8F99',
+    marginBottom: 2,
+  },
+  centerAmount: {
+    fontSize: 34,
     fontWeight: '800',
+    color: '#18191E',
+    letterSpacing: -0.8,
   },
-  mainStatLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+  // Callout Tooltips
+  badgePill: {
+    backgroundColor: '#18191E',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
   },
-  featuredCard: {
-    borderRadius: 16,
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+  // Top Right Badge
+  badgeTopRight: {
+    position: 'absolute',
+    top: 24,
+    right: 32,
+    alignItems: 'center',
+  },
+  badgePointerDown: {
+    width: 7,
+    height: 7,
+    backgroundColor: '#18191E',
+    transform: [{ rotate: '45deg' }],
+    marginTop: -3.5,
+  },
+  // Middle Right Badge
+  badgeMiddleRight: {
+    position: 'absolute',
+    top: 136,
+    right: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  badgePointerLeft: {
+    width: 7,
+    height: 7,
+    backgroundColor: '#18191E',
+    transform: [{ rotate: '45deg' }],
+    marginRight: -3.5,
+  },
+  // Bottom Left Badge
+  badgeBottomLeft: {
+    position: 'absolute',
+    bottom: 68,
+    left: 28,
+    alignItems: 'center',
+  },
+  badgePointerDownCenter: {
+    width: 7,
+    height: 7,
+    backgroundColor: '#18191E',
+    transform: [{ rotate: '45deg' }],
+    marginTop: -3.5,
+  },
+  // Category Breakdown
+  breakdownRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+    gap: 16,
+  },
+  breakdownCol: {
+    flex: 1,
+  },
+  categoryLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  categoryPercent: {
+    fontSize: 19,
+    fontWeight: '800',
+    marginBottom: 8,
+  },
+  barTrack: {
+    height: 6,
+    borderRadius: 3,
     overflow: 'hidden',
   },
-  featuredGrad: {
-    padding: 25,
+  barFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  // Recent Sales Section
+  recentSalesCard: {
+    borderTopLeftRadius: 36,
+    borderTopRightRadius: 36,
+    paddingHorizontal: 22,
+    paddingTop: 24,
+    paddingBottom: 110,
+    marginTop: 8,
+  },
+  recentSalesHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 16,
   },
-  featuredContent: {
-    flex: 1,
-    gap: 10,
-  },
-  featuredTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    gap: 6,
-  },
-  featuredTagText: {
-    color: '#FFF',
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
-  featuredTitle: {
-    color: '#FFF',
-    fontSize: 22,
+  recentSalesTitle: {
+    fontSize: 19,
     fontWeight: '700',
   },
-  featuredSub: {
-    color: 'rgba(255,255,255,0.7)',
+  seeAllText: {
     fontSize: 13,
-    lineHeight: 18,
+    fontWeight: '500',
   },
-  featuredIcon: {
-    position: 'absolute',
-    right: -10,
-    bottom: -10,
-  },
-  section: {
-    gap: 15,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  viewAll: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  brandScroll: {
-    paddingRight: 20,
-    gap: 12,
-  },
-  brandCard: {
-    width: 130,
-    borderRadius: 16,
-    padding: 15,
-    alignItems: 'center',
+  salesList: {
     gap: 10,
   },
-  brandLogoBox: {
-    width: 60,
-    height: 60,
-    borderRadius: 12,
+  saleItemCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 24,
+  },
+  avatarImg: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    marginRight: 14,
+  },
+  avatarWrap: {
+    marginRight: 14,
+  },
+  avatarInitialsBg: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#18191E',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 10,
   },
-  brandLogo: {
-    width: '100%',
-    height: '100%',
-  },
-  brandName: {
-    fontSize: 14,
+  avatarInitialsText: {
+    color: '#FFFFFF',
+    fontSize: 16,
     fontWeight: '700',
   },
-  brandCount: {
+  saleItemMeta: {
+    flex: 1,
+  },
+  saleCustomerName: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  saleTimeText: {
     fontSize: 12,
     fontWeight: '500',
   },
-  actionRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  smallActionCard: {
-    flex: 1,
-    borderRadius: 16,
-    padding: 18,
-    gap: 12,
-  },
-  actionIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionLabel: {
-    fontSize: 14,
+  saleAmountText: {
+    fontSize: 15,
     fontWeight: '700',
   },
 });
+

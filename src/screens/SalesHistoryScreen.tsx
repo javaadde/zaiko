@@ -31,7 +31,7 @@ import type { Sale } from '@/types';
 
 export default function SalesHistoryScreen() {
   const router = useRouter();
-  const { colors, radii, shadows } = useTheme();
+  const { colors, shadows, scheme } = useTheme();
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -102,7 +102,11 @@ export default function SalesHistoryScreen() {
     const isActive = sortBy === value;
     return (
       <TouchableOpacity
-        style={[styles.sortBtn, isActive && { backgroundColor: colors.primary }]}
+        style={[
+          styles.sortBtn,
+          { backgroundColor: colors.bgCard },
+          isActive && { backgroundColor: colors.pastelYellow },
+        ]}
         onPress={() => {
           if (isActive) {
             setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -112,33 +116,33 @@ export default function SalesHistoryScreen() {
           }
         }}
       >
-        <Text style={[styles.sortBtnText, isActive && { color: '#FFF' }]}>
+        <Text style={[styles.sortBtnText, { color: colors.textPrimary }, isActive && { color: '#18191E' }]}>
           {label}
         </Text>
         {isActive &&
           (sortOrder === 'asc' ? (
-            <ArrowUpRight size={14} color={isActive ? '#FFF' : colors.textPrimary} />
+            <ArrowUpRight size={14} color="#18191E" />
           ) : (
-            <ArrowDownRight size={14} color={isActive ? '#FFF' : colors.textPrimary} />
+            <ArrowDownRight size={14} color="#18191E" />
           ))}
       </TouchableOpacity>
     );
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgCard }]}>
-      <StatusBar barStyle="dark-content" />
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} />
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <ChevronLeft size={24} color="#1A1A1A" />
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.bgCard }]} onPress={() => router.back()}>
+          <ChevronLeft size={20} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Sales History</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Sales History</Text>
         <View style={{ width: 44 }} />
       </View>
 
       <View style={styles.filterSection}>
-        <View style={[styles.searchContainer, { backgroundColor: colors.bgCardAlt, borderColor: colors.border }]}>
+        <View style={[styles.searchContainer, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
           <Search size={20} color={colors.textMuted} style={styles.searchIcon} />
           <TextInput
             style={[styles.searchInput, { color: colors.textPrimary }]}
@@ -166,8 +170,8 @@ export default function SalesHistoryScreen() {
 
       {loading && !refreshing ? (
         <View style={styles.centerBox}>
-          <ActivityIndicator size="large" color="#1A1A1A" />
-          <Text style={styles.loadingText}>Fetching sales history...</Text>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textMuted }]}>Fetching sales history...</Text>
         </View>
       ) : (
         <FlatList
@@ -183,8 +187,8 @@ export default function SalesHistoryScreen() {
           }
           ListEmptyComponent={
             <View style={styles.emptyBox}>
-              <TrendingUp size={48} color="#E5E7EB" />
-              <Text style={styles.emptyText}>No sales recorded yet</Text>
+              <TrendingUp size={48} color={colors.textMuted} />
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No sales recorded yet</Text>
             </View>
           }
         />
@@ -194,7 +198,7 @@ export default function SalesHistoryScreen() {
 
   function renderSaleItem({ item }: { item: Sale }) {
     return (
-      <View style={[styles.saleCard, { backgroundColor: colors.bgCard }, shadows.card]}>
+      <View style={[styles.saleCard, { backgroundColor: colors.bgCard, borderColor: colors.border }, shadows.card]}>
         <View style={styles.cardHeader}>
           <View style={[styles.brandBadge, { backgroundColor: colors.bgCardAlt }]}>
             <Text style={[styles.brandText, { color: colors.textSecondary }]}>
@@ -235,7 +239,7 @@ export default function SalesHistoryScreen() {
         <View style={styles.cardFooter}>
           <View style={styles.priceBox}>
             <Text style={[styles.priceLabel, { color: colors.textSecondary }]}>Sold for</Text>
-            <Text style={[styles.priceValue, { color: colors.textPrimary }]}>
+            <Text style={[styles.priceValue, { color: colors.pastelGreen }]}>
               ₹{item.salePrice.toLocaleString()}
             </Text>
           </View>
@@ -244,14 +248,14 @@ export default function SalesHistoryScreen() {
               styles.typeBadge,
               {
                 backgroundColor:
-                  item.saleType === 'wholesale' ? '#E0F2FE' : '#F0FDF4',
+                  item.saleType === 'wholesale' ? colors.pastelYellow : 'rgba(94, 234, 154, 0.2)',
               },
             ]}
           >
             <Text
               style={[
                 styles.typeText,
-                { color: item.saleType === 'wholesale' ? '#0369A1' : '#15803D' },
+                { color: '#18191E' },
               ]}
             >
               {item.saleType.toUpperCase()}
@@ -273,16 +277,22 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 16,
   },
-  backBtn: { padding: 8 },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: '#1A1A1A' },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: { fontSize: 20, fontWeight: '700' },
   filterSection: { paddingHorizontal: 20, gap: 12, marginBottom: 16 },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 12,
+    borderRadius: 16,
     borderWidth: 1,
     paddingHorizontal: 16,
-    height: 48,
+    height: 52,
     gap: 12,
   },
   searchIcon: {},
@@ -296,13 +306,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: '#F3F4F6',
   },
-  sortBtnText: { fontSize: 13, fontWeight: '700', color: '#6B7280' },
+  sortBtnText: { fontSize: 13, fontWeight: '700' },
   centerBox: { paddingVertical: 100, alignItems: 'center', gap: 12 },
-  loadingText: { color: '#999', fontWeight: '600' },
-  listContent: { paddingHorizontal: 20, paddingBottom: 40 },
-  saleCard: { borderRadius: 16, padding: 16, marginBottom: 16 },
+  loadingText: { fontWeight: '600' },
+  listContent: { paddingHorizontal: 20, paddingBottom: 100 },
+  saleCard: { borderRadius: 28, padding: 18, marginBottom: 16, borderWidth: 1 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   brandBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   brandText: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
@@ -320,9 +329,9 @@ const styles = StyleSheet.create({
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   priceBox: {},
   priceLabel: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
-  priceValue: { fontSize: 16, fontWeight: '800' },
-  typeBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  priceValue: { fontSize: 18, fontWeight: '800' },
+  typeBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
   typeText: { fontSize: 11, fontWeight: '800' },
   emptyBox: { alignItems: 'center', paddingVertical: 80, gap: 12 },
-  emptyText: { fontSize: 16, fontWeight: '700', color: '#6B7280' },
+  emptyText: { fontSize: 16, fontWeight: '700' },
 });

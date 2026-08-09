@@ -1,23 +1,20 @@
 import React from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
-import {
-  LayoutDashboard,
-  Package,
-  Plus,
-  History,
-  User,
-} from 'lucide-react-native';
+import { LayoutDashboard, Package, Plus, History, User } from 'lucide-react-native';
+import MindBloomTabBar from '@/components/MindBloomTabBar';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarShowLabel: false,
         tabBarStyle: styles.tabBar,
         tabBarActiveTintColor: '#1E272E',
         tabBarInactiveTintColor: '#B2BEC3',
       }}
+      tabBar={(props) => <MindBloomTabBar {...props} />}
     >
       <Tabs.Screen
         name="index"

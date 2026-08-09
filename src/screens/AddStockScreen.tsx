@@ -45,7 +45,7 @@ const BRANDS = [
 export default function AddStockScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { colors, radii, shadows } = useTheme();
+  const { colors, scheme, radii, shadows } = useTheme();
   const isEditing = !!params.id;
 
   const [loading, setLoading] = useState(false);
@@ -284,22 +284,28 @@ export default function AddStockScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.bg }]}
     >
-      <StatusBar barStyle="dark-content" />
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} />
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.title}>{isEditing ? 'Edit Item' : 'Add New Item'}</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>
+            {isEditing ? 'Edit Item' : 'Add New Item'}
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             {isEditing ? 'Update product information' : 'Fill in the details to update inventory'}
           </Text>
         </View>
 
         <View style={styles.form}>
+          {/* Image Section */}
           <View style={styles.imageSection}>
-            <Text style={styles.label}>Product Photo</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Product Photo</Text>
             <TouchableOpacity
-              style={styles.imagePickerBox}
+              style={[
+                styles.imagePickerBox,
+                { backgroundColor: colors.bgCard, borderColor: colors.border },
+              ]}
               onPress={() => setShowImageModal(true)}
               activeOpacity={0.7}
             >
@@ -315,34 +321,52 @@ export default function AddStockScreen() {
                 </View>
               ) : (
                 <View style={styles.imagePlaceholder}>
-                  <View style={styles.imagePlaceholderIconCircle}>
-                    <ImagePlus size={32} color="#9CA3AF" strokeWidth={1.5} />
-                    <View style={styles.imagePlaceholderPlusBadge}>
+                  <View
+                    style={[
+                      styles.imagePlaceholderIconCircle,
+                      { backgroundColor: scheme === 'dark' ? '#2A2C35' : '#F3F4F6' },
+                    ]}
+                  >
+                    <ImagePlus size={32} color={colors.textMuted} strokeWidth={1.5} />
+                    <View style={[styles.imagePlaceholderPlusBadge, { backgroundColor: colors.primary }]}>
                       <Plus size={12} color="#FFF" strokeWidth={3} />
                     </View>
                   </View>
-                  <Text style={styles.imagePlaceholderTitle}>Add Product Photo</Text>
-                  <Text style={styles.imagePlaceholderSub}>High quality 1:1 photo recommended</Text>
+                  <Text style={[styles.imagePlaceholderTitle, { color: colors.textPrimary }]}>
+                    Add Product Photo
+                  </Text>
+                  <Text style={[styles.imagePlaceholderSub, { color: colors.textMuted }]}>
+                    High quality 1:1 photo recommended
+                  </Text>
                 </View>
               )}
             </TouchableOpacity>
           </View>
 
+          {/* Model Input */}
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Model Name</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Model Name</Text>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                { backgroundColor: colors.bgCard, borderColor: colors.border, color: colors.textPrimary },
+              ]}
               placeholder="e.g. iPhone 16 Pro Max"
               value={model}
               onChangeText={setModel}
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.textMuted}
             />
           </View>
 
+          {/* Brand Dropdown */}
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Brand</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Brand</Text>
             <TouchableOpacity
-              style={[styles.dropdownTrigger, isEditing && { opacity: 0.6 }]}
+              style={[
+                styles.dropdownTrigger,
+                { backgroundColor: colors.bgCard, borderColor: colors.border },
+                isEditing && { opacity: 0.6 },
+              ]}
               onPress={() => !isEditing && setShowBrandModal(true)}
               activeOpacity={isEditing ? 1 : 0.7}
             >
@@ -356,142 +380,189 @@ export default function AddStockScreen() {
                         resizeMode="contain"
                       />
                     ) : (
-                      <View style={styles.selectedBrandLogoPlaceholder}>
-                        <Smartphone size={18} color="#666" />
+                      <View
+                        style={[
+                          styles.selectedBrandLogoPlaceholder,
+                          { backgroundColor: scheme === 'dark' ? '#2A2C35' : '#F3F4F6' },
+                        ]}
+                      >
+                        <Smartphone size={18} color={colors.textSecondary} />
                       </View>
                     )}
-                    <Text style={[styles.selectedBrandText, isEditing && { color: '#999' }]}>
+                    <Text
+                      style={[
+                        styles.selectedBrandText,
+                        { color: colors.textPrimary },
+                        isEditing && { color: colors.textMuted },
+                      ]}
+                    >
                       {brand === 'Other' && otherBrandName ? otherBrandName : brand}
                     </Text>
                   </View>
                 ) : (
-                  <Text style={styles.placeholderText}>Select a brand</Text>
+                  <Text style={[styles.placeholderText, { color: colors.textMuted }]}>Select a brand</Text>
                 )}
-                {!isEditing && <Text style={styles.chevron}>▼</Text>}
+                {!isEditing && <Text style={[styles.chevron, { color: colors.textMuted }]}>▼</Text>}
               </View>
             </TouchableOpacity>
           </View>
 
           {!isEditing && brand === 'Other' && (
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Brand Name</Text>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>Brand Name</Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  { backgroundColor: colors.bgCard, borderColor: colors.border, color: colors.textPrimary },
+                ]}
                 placeholder="Enter mobile brand"
                 value={otherBrandName}
                 onChangeText={setOtherBrandName}
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.textMuted}
               />
             </View>
           )}
 
+          {/* Pricing Row */}
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Cost Price</Text>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>Cost Price</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[
+                    styles.input,
+                    { backgroundColor: colors.bgCard, borderColor: colors.border, color: colors.textPrimary },
+                  ]}
                   placeholder="₹0"
                   keyboardType="numeric"
                   value={purchasePrice}
                   onChangeText={setPurchasePrice}
-                  placeholderTextColor="#999"
+                  placeholderTextColor={colors.textMuted}
                 />
               </View>
             </View>
             <View style={{ flex: 1 }}>
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Selling Price</Text>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>Selling Price</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[
+                    styles.input,
+                    { backgroundColor: colors.bgCard, borderColor: colors.border, color: colors.textPrimary },
+                  ]}
                   placeholder="₹0"
                   keyboardType="numeric"
                   value={sellingPrice}
                   onChangeText={setSellingPrice}
-                  placeholderTextColor="#999"
+                  placeholderTextColor={colors.textMuted}
                 />
               </View>
             </View>
           </View>
 
+          {/* Quantity & IMEI Row */}
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Quantity</Text>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>Quantity</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[
+                    styles.input,
+                    { backgroundColor: colors.bgCard, borderColor: colors.border, color: colors.textPrimary },
+                  ]}
                   placeholder="1"
                   keyboardType="numeric"
                   value={quantity}
                   onChangeText={setQuantity}
-                  placeholderTextColor="#999"
+                  placeholderTextColor={colors.textMuted}
                 />
               </View>
             </View>
             <View style={{ flex: 1 }}>
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>IMEI (optional)</Text>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>IMEI (optional)</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[
+                    styles.input,
+                    { backgroundColor: colors.bgCard, borderColor: colors.border, color: colors.textPrimary },
+                  ]}
                   placeholder="IMEI number"
                   value={imei}
                   onChangeText={setImei}
-                  placeholderTextColor="#999"
+                  placeholderTextColor={colors.textMuted}
                 />
               </View>
             </View>
           </View>
 
+          {/* Pricing Rules Toggle */}
           <TouchableOpacity
-            style={styles.pricingToggle}
+            style={[
+              styles.pricingToggle,
+              { backgroundColor: colors.bgCard, borderColor: colors.border },
+            ]}
             onPress={() => setShowPricingRules(!showPricingRules)}
           >
-            <Text style={styles.pricingToggleText}>Pricing Rules</Text>
-            {showPricingRules ? <ChevronUp size={20} color="#666" /> : <ChevronDown size={20} color="#666" />}
+            <Text style={[styles.pricingToggleText, { color: colors.textSecondary }]}>Pricing Rules</Text>
+            {showPricingRules ? (
+              <ChevronUp size={20} color={colors.textSecondary} />
+            ) : (
+              <ChevronDown size={20} color={colors.textSecondary} />
+            )}
           </TouchableOpacity>
 
           {showPricingRules && (
             <View style={styles.row}>
               <View style={{ flex: 1 }}>
                 <View style={styles.inputContainer}>
-                  <Text style={styles.label}>Min Wholesale Price</Text>
+                  <Text style={[styles.label, { color: colors.textSecondary }]}>Min Wholesale Price</Text>
                   <TextInput
-                    style={styles.input}
+                    style={[
+                      styles.input,
+                      { backgroundColor: colors.bgCard, borderColor: colors.border, color: colors.textPrimary },
+                    ]}
                     placeholder="₹0"
                     keyboardType="numeric"
                     value={minWholesalePrice}
                     onChangeText={setMinWholesalePrice}
-                    placeholderTextColor="#999"
+                    placeholderTextColor={colors.textMuted}
                   />
                 </View>
               </View>
               <View style={{ flex: 1 }}>
                 <View style={styles.inputContainer}>
-                  <Text style={styles.label}>Min Retail Price</Text>
+                  <Text style={[styles.label, { color: colors.textSecondary }]}>Min Retail Price</Text>
                   <TextInput
-                    style={styles.input}
+                    style={[
+                      styles.input,
+                      { backgroundColor: colors.bgCard, borderColor: colors.border, color: colors.textPrimary },
+                    ]}
                     placeholder="₹0"
                     keyboardType="numeric"
                     value={minRetailPrice}
                     onChangeText={setMinRetailPrice}
-                    placeholderTextColor="#999"
+                    placeholderTextColor={colors.textMuted}
                   />
                 </View>
               </View>
             </View>
           )}
 
+          {/* Supplier Input */}
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Supplier (optional)</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Supplier (optional)</Text>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                { backgroundColor: colors.bgCard, borderColor: colors.border, color: colors.textPrimary },
+              ]}
               placeholder="Supplier name"
               value={supplier}
               onChangeText={setSupplier}
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.textMuted}
             />
           </View>
 
+          {/* Submit Button */}
           <TouchableOpacity
             style={[styles.submitBtn, { backgroundColor: colors.primary }, !model && styles.submitBtnDisabled]}
             onPress={handleSave}
@@ -506,6 +577,7 @@ export default function AddStockScreen() {
         </View>
       </ScrollView>
 
+      {/* Brand Selection Modal */}
       <Modal visible={showBrandModal} transparent animationType="fade" onRequestClose={() => setShowBrandModal(false)}>
         <TouchableOpacity
           style={styles.modalOverlay}
@@ -516,7 +588,7 @@ export default function AddStockScreen() {
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Select Brand</Text>
               <TouchableOpacity onPress={() => setShowBrandModal(false)}>
-                <X size={24} color="#9CA3AF" />
+                <X size={24} color={colors.textMuted} />
               </TouchableOpacity>
             </View>
             <FlatList
@@ -524,7 +596,7 @@ export default function AddStockScreen() {
               keyExtractor={(item) => item.name}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={styles.brandOption}
+                  style={[styles.brandOption, { borderBottomColor: colors.border }]}
                   onPress={() => {
                     setBrand(item.name);
                     setShowBrandModal(false);
@@ -533,12 +605,17 @@ export default function AddStockScreen() {
                   {item.logo ? (
                     <Image source={item.logo} style={styles.brandOptionLogo} resizeMode="contain" />
                   ) : (
-                    <View style={styles.brandOptionPlaceholder}>
-                      <Smartphone size={18} color="#666" />
+                    <View
+                      style={[
+                        styles.brandOptionPlaceholder,
+                        { backgroundColor: scheme === 'dark' ? '#2A2C35' : '#F3F4F6' },
+                      ]}
+                    >
+                      <Smartphone size={18} color={colors.textSecondary} />
                     </View>
                   )}
                   <Text style={[styles.brandOptionText, { color: colors.textPrimary }]}>{item.name}</Text>
-                  {brand === item.name && <Check size={20} color={colors.accent} />}
+                  {brand === item.name && <Check size={20} color={colors.primary} />}
                 </TouchableOpacity>
               )}
             />
@@ -546,6 +623,7 @@ export default function AddStockScreen() {
         </TouchableOpacity>
       </Modal>
 
+      {/* Image Selection Modal */}
       <Modal visible={showImageModal} transparent animationType="fade" onRequestClose={() => setShowImageModal(false)}>
         <TouchableOpacity
           style={styles.modalOverlay}
@@ -556,14 +634,20 @@ export default function AddStockScreen() {
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Add Photo</Text>
               <TouchableOpacity onPress={() => setShowImageModal(false)}>
-                <X size={24} color="#9CA3AF" />
+                <X size={24} color={colors.textMuted} />
               </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.imageOption} onPress={takePhoto}>
+            <TouchableOpacity
+              style={[styles.imageOption, { borderBottomColor: colors.border }]}
+              onPress={takePhoto}
+            >
               <Camera size={24} color={colors.primary} />
               <Text style={[styles.imageOptionText, { color: colors.textPrimary }]}>Take Photo</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.imageOption} onPress={pickImage}>
+            <TouchableOpacity
+              style={[styles.imageOption, { borderBottomColor: colors.border }]}
+              onPress={pickImage}
+            >
               <ImageIcon size={24} color={colors.primary} />
               <Text style={[styles.imageOptionText, { color: colors.textPrimary }]}>Choose from Gallery</Text>
             </TouchableOpacity>
@@ -577,12 +661,11 @@ export default function AddStockScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF',
   },
   scroll: {
     paddingTop: 60,
     paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingBottom: 110,
   },
   center: {
     flex: 1,
@@ -599,13 +682,12 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    color: '#1A1A1A',
-    fontWeight: '300',
+    fontWeight: '700',
+    letterSpacing: -0.4,
   },
   subtitle: {
     fontSize: 14,
-    color: '#999',
-    fontWeight: '600',
+    fontWeight: '500',
     marginTop: 6,
   },
   form: {
@@ -615,17 +697,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   label: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
-    color: '#666',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   imagePickerBox: {
-    height: 220,
-    borderRadius: 16,
-    backgroundColor: '#F9FAFB',
+    height: 200,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
@@ -644,7 +724,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
     paddingVertical: 12,
     alignItems: 'center',
   },
@@ -655,54 +735,48 @@ const styles = StyleSheet.create({
   },
   imagePlaceholder: {
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   imagePlaceholderIconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 24,
-    backgroundColor: '#F3F4F6',
+    width: 64,
+    height: 64,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
   imagePlaceholderPlusBadge: {
     position: 'absolute',
-    bottom: -6,
-    right: -6,
-    backgroundColor: '#1A1A1A',
+    bottom: -4,
+    right: -4,
     borderRadius: 9999,
-    width: 24,
-    height: 24,
+    width: 22,
+    height: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
   imagePlaceholderTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
-    color: '#1A1A1A',
   },
   imagePlaceholderSub: {
-    fontSize: 13,
-    color: '#999',
+    fontSize: 12,
   },
   inputContainer: {
     gap: 6,
   },
   input: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-    padding: 16,
-    color: '#1A1A1A',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     fontWeight: '500',
+    fontSize: 15,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
   },
   dropdownTrigger: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
   dropdownContent: {
     flexDirection: 'row',
@@ -715,29 +789,26 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   selectedBrandLogo: {
-    width: 28,
-    height: 28,
+    width: 26,
+    height: 26,
   },
   selectedBrandLogoPlaceholder: {
-    width: 28,
-    height: 28,
+    width: 26,
+    height: 26,
     borderRadius: 8,
-    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
   },
   selectedBrandText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#1A1A1A',
   },
   placeholderText: {
-    color: '#999',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '500',
   },
   chevron: {
-    color: '#999',
+    fontSize: 12,
     fontWeight: '700',
   },
   row: {
@@ -748,21 +819,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
   },
   pricingToggleText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
-    color: '#666',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   submitBtn: {
-    borderRadius: 12,
-    padding: 18,
+    borderRadius: 18,
+    paddingVertical: 16,
     alignItems: 'center',
     marginTop: 8,
   },
@@ -776,12 +846,12 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     padding: 24,
     maxHeight: '70%',
   },
@@ -799,19 +869,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
   },
   brandOptionLogo: {
-    width: 32,
-    height: 32,
+    width: 30,
+    height: 30,
   },
   brandOptionPlaceholder: {
-    width: 32,
-    height: 32,
+    width: 30,
+    height: 30,
     borderRadius: 8,
-    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -826,10 +894,10 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
   },
   imageOptionText: {
     fontSize: 16,
     fontWeight: '600',
   },
 });
+

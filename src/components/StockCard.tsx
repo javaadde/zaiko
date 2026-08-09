@@ -6,7 +6,7 @@ import { getBrandLogo } from '@/data/brands';
 import type { InventoryItem } from '@/types';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = (width - 60) / 2;
+const CARD_WIDTH = (width - 56) / 2;
 
 type StockCardProps = {
   item: InventoryItem;
@@ -15,18 +15,22 @@ type StockCardProps = {
 };
 
 export default function StockCard({ item, onDelete, onPress }: StockCardProps) {
-  const { shadows } = useTheme();
+  const { colors, shadows } = useTheme();
   const hasImage = !!item.imageUrl;
   const logo = item.brand ? getBrandLogo(item.brand) : null;
 
   return (
     <TouchableOpacity
       activeOpacity={0.9}
-      style={[styles.card, shadows.card]}
+      style={[
+        styles.card,
+        { backgroundColor: colors.bgCard, borderColor: colors.border },
+        shadows.card,
+      ]}
       onPress={() => onPress?.(item)}
       onLongPress={() => onDelete?.(item)}
     >
-      <View style={styles.imageContainer}>
+      <View style={[styles.imageContainer, { backgroundColor: colors.bgCardAlt }]}>
         {hasImage ? (
           <Image
             source={{ uri: item.imageUrl as string }}
@@ -55,23 +59,23 @@ export default function StockCard({ item, onDelete, onPress }: StockCardProps) {
               item.quantity <= 0 && styles.stockTextOut,
             ]}
           >
-            {item.quantity}
+            {item.quantity} units
           </Text>
         </View>
       </View>
 
       <View style={styles.info}>
         <View style={styles.textContainer}>
-          <Text style={styles.model} numberOfLines={1}>
+          <Text style={[styles.model, { color: colors.textPrimary }]} numberOfLines={1}>
             {item.model}
           </Text>
-          <Text style={styles.price}>
+          <Text style={[styles.price, { color: colors.pastelGreen }]}>
             ₹{(item.sellingPrice / 1000).toFixed(1)}k
           </Text>
         </View>
 
-        <View style={styles.actionBtn}>
-          <ArrowUpRight size={20} color="#1A1A1A" />
+        <View style={[styles.actionBtn, { backgroundColor: colors.pastelYellow }]}>
+          <ArrowUpRight size={18} color="#18191E" strokeWidth={2.5} />
         </View>
       </View>
     </TouchableOpacity>
@@ -80,18 +84,17 @@ export default function StockCard({ item, onDelete, onPress }: StockCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFF',
     width: CARD_WIDTH,
-    borderRadius: 16,
+    borderRadius: 28,
     padding: 12,
-    marginHorizontal: 8,
-    marginVertical: 10,
+    marginHorizontal: 6,
+    marginVertical: 8,
+    borderWidth: 1,
   },
   imageContainer: {
     width: '100%',
-    height: 180,
-    borderRadius: 16,
-    backgroundColor: '#F8F9FA',
+    height: 160,
+    borderRadius: 22,
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
@@ -106,70 +109,57 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logo: {
-    width: 80,
-    height: 80,
+    width: 70,
+    height: 70,
     opacity: 0.8,
   },
   emoji: {
-    fontSize: 50,
+    fontSize: 44,
   },
   stockBadge: {
     position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: '#FFF',
+    top: 10,
+    right: 10,
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    borderRadius: 10,
   },
   stockBadgeOut: {
-    backgroundColor: '#EF4444',
+    backgroundColor: '#FF6B6B',
   },
   stockText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
-    color: '#1A1A1A',
+    color: '#18191E',
   },
   stockTextOut: {
-    color: '#FFF',
+    color: '#FFFFFF',
   },
   info: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    paddingHorizontal: 4,
+    paddingHorizontal: 2,
   },
   textContainer: {
     flex: 1,
-    marginRight: 8,
+    marginRight: 6,
   },
   model: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
-    color: '#1A1A1A',
     marginBottom: 4,
   },
   price: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#F59E0B',
+    fontSize: 17,
+    fontWeight: '800',
   },
   actionBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 9999,
-    backgroundColor: '#F8F9FA',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
 });
