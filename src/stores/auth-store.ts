@@ -1,9 +1,31 @@
+import { getApp } from '@react-native-firebase/app';
 import { create } from 'zustand';
 import Constants from 'expo-constants';
 import type { User, Company, Environment } from '@/types';
-import { auth, firestore } from '@/lib/firebase';
 import { getUserFriendlyError } from '@/lib/errors';
 import { setUserName } from '@/lib/mmkv';
+import {
+  GoogleAuthProvider,
+  createUserWithEmailAndPassword,
+  getAuth,
+  onAuthStateChanged,
+  signInWithCredential,
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+} from '@react-native-firebase/auth';
+import {
+  collection,
+  doc,
+  getFirestore,
+  serverTimestamp,
+  setDoc,
+  writeBatch,
+} from '@react-native-firebase/firestore';
+
+const firebaseApp = getApp();
+const auth = getAuth(firebaseApp);
+const db = getFirestore(firebaseApp);
+const googleWebClientId = '613503506472-c20jaa0nck646h9vmbbmocm7ird2iu9s.apps.googleusercontent.com';
 
 type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
 
@@ -41,7 +63,7 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
   authError: null,
 
   initAuth: () => {
-    const unsub = auth().onAuthStateChanged((fbUser) => {
+    const unsub = onAuthStateChanged(auth, (fbUser) => {
       void (async () => {
         try {
           if (!fbUser) {
@@ -57,7 +79,7 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
             return;
           }
 
-          const userRef = firestore().collection('users').doc(fbUser.uid);
+          const userRef = doc(db, 'users', fbUser.uid);
           const snap = await userRef.get();
           const data = snap.data() ?? {};
           const user: User = {
@@ -72,7 +94,7 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
             deletedAt: data.deletedAt?.toMillis() ?? null,
           };
 
-          const companiesSnap = await userRef.collection('companies').get();
+          const companiesSnap = await collection(userRef, 'companies').get();
           const companies: Company[] = companiesSnap.docs.map((d) => {
             const c = d.data();
             return {
@@ -93,11 +115,7 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
 
           let environments: Environment[] = [];
           if (activeCompany) {
-            const envSnap = await firestore()
-              .collection('companies')
-              .doc(activeCompany.id)
-              .collection('environments')
-              .get();
+            const envSnap = await collection(doc(db, 'companies', activeCompany.id), 'environments').get();
             environments = envSnap.docs.map((d) => {
               const e = d.data();
               return {
@@ -149,13 +167,14 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
         throw new Error('Google Sign-In requires a development build, not Expo Go.');
       }
       const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
-      await GoogleSignin.hasPlayServices();
+      GoogleSignin.configure({ webClientId: googleWebClientId });
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
       const response = await GoogleSignin.signIn();
       if (!response.data?.idToken) {
         throw new Error('Google Sign-In failed: no id token');
       }
-      const credential = auth.GoogleAuthProvider.credential(response.data.idToken);
-      await auth().signInWithCredential(credential);
+      const credential = GoogleAuthProvider.credential(response.data.idToken);
+      await signInWithCredential(auth, credential);
     } catch (err) {
       const message = getUserFriendlyError(err, 'Google Sign-In failed');
       set({ authError: message, status: 'unauthenticated' });
@@ -165,7 +184,7 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
   signInWithEmail: async (email, password) => {
     set({ authError: null, status: 'loading' });
     try {
-      await auth().signInWithEmailAndPassword(email, password);
+      await signInWithEmailAndPassword(auth, email, password);
     } catch (err) {
       const message = getUserFriendlyError(err, 'Email sign-in failed');
       set({ authError: message, status: 'unauthenticated' });
@@ -175,14 +194,14 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
   signUpWithEmail: async (email, password, displayName) => {
     set({ authError: null, status: 'loading' });
     try {
-      const cred = await auth().createUserWithEmailAndPassword(email, password);
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
       const uid = cred.user.uid;
-      await firestore().collection('users').doc(uid).set({
+      await setDoc(doc(db, 'users', uid), {
         displayName,
         email,
         personalColor: '#1F8A5B',
-        createdAt: firestore.FieldValue.serverTimestamp(),
-        updatedAt: firestore.FieldValue.serverTimestamp(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
     } catch (err) {
       const message = getUserFriendlyError(err, 'Email sign-up failed');
@@ -192,7 +211,7 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
 
   signOut: async () => {
     try {
-      await auth().signOut();
+      await firebaseSignOut(auth);
       setUserName('');
       set({
         status: 'unauthenticated',
@@ -215,38 +234,48 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
     if (!user) throw new Error('Not authenticated');
 
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-    const companyRef = firestore().collection('companies').doc();
+    const companyRef = doc(collection(db, 'companies'));
     const companyId = companyRef.id;
 
-    const batch = firestore().batch();
+    const batch = writeBatch(db);
     batch.set(companyRef, {
       name,
       slug,
       ownerId: user.uid,
       members: [user.uid],
       admins: [user.uid],
-      createdAt: firestore.FieldValue.serverTimestamp(),
-      updatedAt: firestore.FieldValue.serverTimestamp(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     });
 
-    batch.set(companyRef.collection('environments').doc('development'), {
+    batch.set(doc(db, 'users', user.uid, 'companies', companyId), {
+      name,
+      slug,
+      ownerId: user.uid,
+      members: [user.uid],
+      admins: [user.uid],
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    batch.set(doc(companyRef, 'environments', 'development'), {
       companyId,
       name: 'Development',
       type: 'development',
       members: [user.uid],
       admins: [user.uid],
-      createdAt: firestore.FieldValue.serverTimestamp(),
-      updatedAt: firestore.FieldValue.serverTimestamp(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     });
 
-    batch.set(companyRef.collection('environments').doc('production'), {
+    batch.set(doc(companyRef, 'environments', 'production'), {
       companyId,
       name: 'Production',
       type: 'production',
       members: [user.uid],
       admins: [user.uid],
-      createdAt: firestore.FieldValue.serverTimestamp(),
-      updatedAt: firestore.FieldValue.serverTimestamp(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     });
 
     await batch.commit();
@@ -310,20 +339,16 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
     const user = get().currentUser;
     if (!user) throw new Error('Not authenticated');
 
-    const envRef = firestore()
-      .collection('companies')
-      .doc(companyId)
-      .collection('environments')
-      .doc();
+    const envRef = doc(collection(doc(db, 'companies', companyId), 'environments'));
 
-    await envRef.set({
+    await setDoc(envRef, {
       companyId,
       name,
       type,
       members: [user.uid],
       admins: [user.uid],
-      createdAt: firestore.FieldValue.serverTimestamp(),
-      updatedAt: firestore.FieldValue.serverTimestamp(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     });
 
     const environment: Environment = {
@@ -349,11 +374,7 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
     const company = get().companies.find((c) => c.id === companyId) ?? null;
     if (!company) return;
 
-    const envSnap = await firestore()
-      .collection('companies')
-      .doc(companyId)
-      .collection('environments')
-      .get();
+    const envSnap = await collection(doc(db, 'companies', companyId), 'environments').get();
 
     const environments: Environment[] = envSnap.docs.map((d) => {
       const e = d.data();
@@ -386,7 +407,7 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
   refreshProfile: async () => {
     const user = get().currentUser;
     if (!user) return;
-    const snap = await firestore().collection('users').doc(user.uid).get();
+    const snap = await doc(db, 'users', user.uid).get();
     const data = snap.data() ?? {};
     set({
       currentUser: {

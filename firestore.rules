@@ -44,6 +44,10 @@ service cloud.firestore {
       match /private/{docId} {
         allow read, write: if isSignedIn() && isOwner(uid);
       }
+
+      match /companies/{companyId} {
+        allow read, write: if isSignedIn() && isOwner(uid);
+      }
     }
 
     match /companies/{companyId} {
@@ -60,8 +64,9 @@ service cloud.firestore {
 
       match /environments/{envId} {
         allow read: if isSignedIn() && isEnvMember(companyId, envId);
-        allow create: if isSignedIn() && isCompanyAdmin(companyId)
-          && request.auth.uid in request.resource.data.members;
+        allow create: if isSignedIn()
+          && request.auth.uid in request.resource.data.members
+          && request.auth.uid in request.resource.data.admins;
         allow update: if isSignedIn() && isEnvMember(companyId, envId)
           && (
             request.resource.data.get('deletedAt', null) == resource.data.get('deletedAt', null)

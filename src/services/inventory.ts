@@ -1,8 +1,14 @@
-import { firestore, storage } from '@/lib/firebase';
+import { getApp } from '@react-native-firebase/app';
 import { tsToMs, serverTs } from '@/lib/firestore';
 import type { InventoryItem } from '@/types';
 import type { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 import { useAuthStore } from '@/stores/auth-store';
+import { collection, doc, getFirestore, increment } from '@react-native-firebase/firestore';
+import { getDownloadURL, getStorage, putFile, ref as storageRef } from '@react-native-firebase/storage';
+
+const firebaseApp = getApp();
+const db = getFirestore(firebaseApp);
+const storage = getStorage(firebaseApp);
 
 export function getEnvRef() {
   const company = useAuthStore.getState().currentCompany;
@@ -10,11 +16,7 @@ export function getEnvRef() {
   if (!company || !environment) {
     throw new Error('No active company or environment');
   }
-  return firestore()
-    .collection('companies')
-    .doc(company.id)
-    .collection('environments')
-    .doc(environment.id);
+  return doc(db, 'companies', company.id, 'environments', environment.id);
 }
 
 export async function getInventoryItems(filters?: {
@@ -111,7 +113,7 @@ export async function getInventoryItem(id: string) {
 export async function createInventoryItem(item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>) {
   const envRef = getEnvRef();
   const user = useAuthStore.getState().currentUser;
-  const docRef = envRef.collection('inventory').doc();
+  const docRef = doc(collection(envRef, 'inventory'));
   await docRef.set({
     ...item,
     id: docRef.id,
@@ -126,37 +128,37 @@ export async function updateInventoryItem(
   id: string,
   updates: Partial<Omit<InventoryItem, 'id' | 'createdAt' | 'createdBy' | 'deletedAt'>>,
 ) {
-  await getEnvRef().collection('inventory').doc(id).update({
+  await doc(collection(getEnvRef(), 'inventory'), id).update({
     ...updates,
     updatedAt: serverTs(),
   });
 }
 
 export async function deleteInventoryItem(id: string) {
-  await getEnvRef().collection('inventory').doc(id).update({
+  await doc(collection(getEnvRef(), 'inventory'), id).update({
     deletedAt: serverTs(),
     updatedAt: serverTs(),
   });
 }
 
 export async function archiveInventoryItem(id: string) {
-  await getEnvRef().collection('inventory').doc(id).update({
+  await doc(collection(getEnvRef(), 'inventory'), id).update({
     isArchived: true,
     updatedAt: serverTs(),
   });
 }
 
 export async function unarchiveInventoryItem(id: string) {
-  await getEnvRef().collection('inventory').doc(id).update({
+  await doc(collection(getEnvRef(), 'inventory'), id).update({
     isArchived: false,
     updatedAt: serverTs(),
   });
 }
 
 export async function uploadInventoryImage(uri: string, path: string) {
-  const ref = storage().ref(`inventory/${path}`);
-  await ref.putFile(uri);
-  const url = await ref.getDownloadURL();
+  const ref = storageRef(storage, `inventory/${path}`);
+  await putFile(ref, uri);
+  const url = await getDownloadURL(ref);
   return { url, path };
 }
 
@@ -183,9 +185,9 @@ export async function getInventoryStats() {
 
 export async function restockItem(id: string, quantity: number) {
   const envRef = getEnvRef();
-  const docRef = envRef.collection('inventory').doc(id);
+  const docRef = doc(collection(envRef, 'inventory'), id);
   await docRef.update({
-    quantity: firestore.FieldValue.increment(quantity),
+    quantity: increment(quantity),
     updatedAt: serverTs(),
   });
   const snap = await docRef.get();

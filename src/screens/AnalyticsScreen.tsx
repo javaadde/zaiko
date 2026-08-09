@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,20 +6,17 @@ import {
   ScrollView,
   Animated,
   StatusBar,
-  TouchableOpacity,
+  Dimensions,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import {
   TrendingUp,
   DollarSign,
-  Target,
-  ArrowDown,
-  ArrowUp,
-  RotateCcw,
 } from 'lucide-react-native';
 import { useTheme } from '@/hooks/use-theme';
 import { getInventoryStats } from '@/services/inventory';
+import { useAuthStore } from '@/stores/auth-store';
 
 type AnimatedNumberProps = {
   target: number;
@@ -29,7 +26,7 @@ type AnimatedNumberProps = {
 };
 
 function AnimatedNumber({ target, prefix = '', suffix = '', style }: AnimatedNumberProps) {
-  const animVal = useRef(new Animated.Value(0)).current;
+  const [animVal] = useState(() => new Animated.Value(0));
   const [display, setDisplay] = useState('0');
 
   useEffect(() => {
@@ -48,7 +45,7 @@ function AnimatedNumber({ target, prefix = '', suffix = '', style }: AnimatedNum
       );
     });
     return () => animVal.removeListener(id);
-  }, [target]);
+  }, [animVal, target]);
 
   return (
     <Text style={style}>
@@ -60,7 +57,7 @@ function AnimatedNumber({ target, prefix = '', suffix = '', style }: AnimatedNum
 }
 
 function LineGraph({ data, labels, color, height = 120 }: { data: number[]; labels: string[]; color: string; height?: number }) {
-  const { width } = require('react-native').Dimensions.get('window');
+  const { width } = Dimensions.get('window');
   if (!data || data.length === 0) return null;
 
   const max = Math.max(...data, 1);
@@ -125,13 +122,21 @@ function LineGraph({ data, labels, color, height = 120 }: { data: number[]; labe
 }
 
 export default function AnalyticsScreen() {
-  const { colors, radii, shadows } = useTheme();
+  const { colors, shadows } = useTheme();
+  const { currentCompany, currentEnvironment } = useAuthStore();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [fadeAnim] = useState(() => new Animated.Value(0));
 
   const fetchStats = useCallback(async () => {
+    if (!currentCompany || !currentEnvironment) {
+      setStats(null);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+
     try {
       const data = await getInventoryStats();
       setStats(data);
@@ -141,16 +146,21 @@ export default function AnalyticsScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [currentCompany, currentEnvironment]);
 
   useEffect(() => {
-    fetchStats();
+    const timer = setTimeout(() => {
+      void fetchStats();
+    }, 0);
+
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 600,
       useNativeDriver: true,
     }).start();
-  }, []);
+
+    return () => clearTimeout(timer);
+  }, [fadeAnim, fetchStats]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);

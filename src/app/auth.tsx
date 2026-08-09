@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Activi
 import Constants from 'expo-constants';
 import { Colors, BorderRadius } from '@/constants/tokens';
 import { useAuthStore } from '@/stores/auth-store';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
 
 export default function AuthScreen() {
   const { signInWithGoogle, signInWithEmail, signUpWithEmail, clearError, authError, status } = useAuthStore();
@@ -24,14 +26,14 @@ export default function AuthScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Zaiko Mobiles</Text>
-        <Text style={styles.subtitle}>Premium Mobile Store</Text>
+        <Text style={styles.title}>Zaiko</Text>
+        <Text style={styles.subtitle}>Add your mobiles to zaiko</Text>
       </View>
 
       <View style={styles.card}>
         {canUseGoogleAuth && (
           <TouchableOpacity style={styles.googleBtn} onPress={signInWithGoogle}>
-            <Text style={styles.googleBtnText}>Continue with Google</Text>
+            <Text style={styles.googleBtnText}><Icon name="google" size={24} color="#4285F4" />  Continue with Google</Text>
           </TouchableOpacity>
         )}
 

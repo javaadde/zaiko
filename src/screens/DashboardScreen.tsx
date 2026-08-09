@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,12 +18,12 @@ import {
   Building2,
   Zap,
   TrendingUp,
-  ArrowRight,
 } from 'lucide-react-native';
 import { useTheme } from '@/hooks/use-theme';
 import { getInventoryStats } from '@/services/inventory';
 import { getBrandLogo } from '@/data/brands';
 import type { DashboardTabKey } from '@/constants/navigation';
+import { useAuthStore } from '@/stores/auth-store';
 
 type Props = {
   onTabChange: (tab: DashboardTabKey) => void;
@@ -39,21 +39,18 @@ type Stats = {
 };
 
 export default function DashboardScreen({ onTabChange }: Props) {
-  const { colors, spacing, radii, shadows } = useTheme();
-  const headerAnim = useRef(new Animated.Value(-10)).current;
-  const headerOpacity = useRef(new Animated.Value(0)).current;
+  const { colors, shadows } = useTheme();
+  const { currentCompany, currentEnvironment } = useAuthStore();
+  const [headerAnim] = useState(() => new Animated.Value(-10));
+  const [headerOpacity] = useState(() => new Animated.Value(0));
 
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [greeting, setGreeting] = useState('Welcome back');
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
 
   useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting('Good Morning');
-    else if (hour < 17) setGreeting('Good Afternoon');
-    else setGreeting('Good Evening');
-
     Animated.parallel([
       Animated.spring(headerAnim, {
         toValue: 0,
@@ -67,9 +64,16 @@ export default function DashboardScreen({ onTabChange }: Props) {
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [headerAnim, headerOpacity]);
 
   const fetchStats = useCallback(async () => {
+    if (!currentCompany || !currentEnvironment) {
+      setStats(null);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+
     try {
       const data = await getInventoryStats();
       setStats(data as Stats);
@@ -79,10 +83,14 @@ export default function DashboardScreen({ onTabChange }: Props) {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [currentCompany, currentEnvironment]);
 
   useEffect(() => {
-    fetchStats();
+    const timer = setTimeout(() => {
+      void fetchStats();
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [fetchStats]);
 
   const onRefresh = useCallback(() => {

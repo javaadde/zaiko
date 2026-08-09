@@ -1,4 +1,4 @@
-import { firestore } from './firebase';
+import { Timestamp, serverTimestamp } from '@react-native-firebase/firestore';
 import type { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 import type { TimestampMs } from '@/types';
 
@@ -9,9 +9,9 @@ export function tsToMs(
 }
 
 export function msToTs(ms: TimestampMs): FirebaseFirestoreTypes.Timestamp {
-  return firestore.Timestamp.fromMillis(ms);
+  return Timestamp.fromMillis(ms);
 }
 
 export function serverTs(): FirebaseFirestoreTypes.Timestamp {
-  return firestore.FieldValue.serverTimestamp() as FirebaseFirestoreTypes.Timestamp;
+  return serverTimestamp() as FirebaseFirestoreTypes.Timestamp;
 }
