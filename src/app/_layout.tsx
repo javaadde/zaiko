@@ -28,7 +28,8 @@ export default function RootLayout() {
       router.replace('/auth');
     } else if (currentUser && !currentCompany && !inSetupGroup) {
       router.replace('/setup');
-    } else if (currentUser && currentCompany && (inAuthGroup || inSetupGroup)) {
+    } else if (currentUser && currentCompany && inAuthGroup) {
+      // Allow navigating to setup even when a company exists (for creating another one)
       router.replace('/(tabs)');
     }
   }, [currentUser, currentCompany, authLoading, segments, router]);
@@ -71,4 +72,3 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFF6FF',
   },
 });
-

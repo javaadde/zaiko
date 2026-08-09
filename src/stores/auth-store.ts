@@ -106,11 +106,8 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
           deletedAt: null,
         };
 
-        set({
-          status: 'authenticated',
-          currentUser: immediateUser,
-          authError: null,
-        });
+        // Keep status as 'loading' until profile + workspace data are loaded
+        set({ currentUser: immediateUser, authError: null });
 
         const userRef = doc(db, 'users', fbUser.uid);
         const snap = await userRef.get();
@@ -179,17 +176,27 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
           environments,
           currentEnvironment: activeEnvironment,
           authError: null,
+          status: 'authenticated',
         });
       } catch (err) {
-        set({
-          status: 'unauthenticated',
-          currentUser: null,
-          currentCompany: null,
-          currentEnvironment: null,
-          companies: [],
-          environments: [],
-          authError: getUserFriendlyError(err, 'Auth initialization failed'),
-        });
+        // If the user is signed in but data fetch failed (eg. Firestore perms),
+        // keep the session and surface an error instead of logging out.
+        if (auth.currentUser) {
+          set({
+            status: 'authenticated',
+            authError: getUserFriendlyError(err, 'Auth initialization failed'),
+          });
+        } else {
+          set({
+            status: 'unauthenticated',
+            currentUser: null,
+            currentCompany: null,
+            currentEnvironment: null,
+            companies: [],
+            environments: [],
+            authError: getUserFriendlyError(err, 'Auth initialization failed'),
+          });
+        }
       }
     });
 
@@ -435,26 +442,32 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
 
     const user = get().currentUser;
     if (!user) return;
-    // Match Firestore rules by filtering environments by membership.
-    const envSnap = await doc(db, 'companies', companyId)
-      .collection('environments')
-      .where('members', 'array-contains', user.uid)
-      .get();
+    let environments: Environment[] = [];
+    try {
+      // Match Firestore rules by filtering environments by membership.
+      const envSnap = await doc(db, 'companies', companyId)
+        .collection('environments')
+        .where('members', 'array-contains', user.uid)
+        .get();
 
-    const environments: Environment[] = envSnap.docs.map((d) => {
-      const e = d.data();
-      return {
-        id: d.id,
-        companyId: e.companyId ?? companyId,
-        name: e.name ?? '',
-        type: e.type ?? 'development',
-        members: e.members ?? [],
-        admins: e.admins ?? [],
-        createdAt: e.createdAt?.toMillis() ?? Date.now(),
-        updatedAt: e.updatedAt?.toMillis() ?? Date.now(),
-        deletedAt: e.deletedAt?.toMillis() ?? null,
-      };
-    });
+      environments = envSnap.docs.map((d) => {
+        const e = d.data();
+        return {
+          id: d.id,
+          companyId: e.companyId ?? companyId,
+          name: e.name ?? '',
+          type: e.type ?? 'development',
+          members: e.members ?? [],
+          admins: e.admins ?? [],
+          createdAt: e.createdAt?.toMillis() ?? Date.now(),
+          updatedAt: e.updatedAt?.toMillis() ?? Date.now(),
+          deletedAt: e.deletedAt?.toMillis() ?? null,
+        };
+      });
+    } catch (err) {
+      // Gracefully handle rules issues; still switch company
+      environments = [];
+    }
 
     set({
       currentCompany: company,
