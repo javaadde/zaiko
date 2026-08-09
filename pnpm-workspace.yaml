@@ -2,4 +2,5 @@ allowBuilds:
   '@firebase/util': true
   dtrace-provider: true
   protobufjs: true
+  re2: true
   unrs-resolver: true

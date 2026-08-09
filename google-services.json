@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "613503506472-uo0a8pjjn8ogeqlsb8imrcqijrq8q23u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "zaiko.space",
+            "certificate_hash": "ed449de857629e19d046d19094739b6282d38e9a"
+          }
+        },
+        {
           "client_id": "613503506472-c20jaa0nck646h9vmbbmocm7ird2iu9s.apps.googleusercontent.com",
           "client_type": 3
         }

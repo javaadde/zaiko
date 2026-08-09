@@ -8,8 +8,8 @@
     "android": "expo run:android",
     "web": "expo start --web",
     "lint": "expo lint",
-    "deploy:rules": "npx firebase deploy --only firestore:rules",
-    "deploy:indexes": "npx firebase deploy --only firestore:indexes"
+    "deploy:rules": "firebase deploy --only firestore:rules",
+    "deploy:indexes": "firebase deploy --only firestore:indexes"
   },
   "dependencies": {
     "@gorhom/bottom-sheet": "^5.2.14",
@@ -70,7 +70,13 @@
     "eslint": "^9.39.4",
     "eslint-config-expo": "~56.0.4",
     "expo-build-properties": "~56.0.25",
+    "firebase-tools": "^15.26.0",
     "typescript": "~6.0.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "re2"
+    ]
   },
   "private": true
 }

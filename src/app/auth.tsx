@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Activi
 import Constants from 'expo-constants';
 import { Colors, BorderRadius } from '@/constants/tokens';
 import { useAuthStore } from '@/stores/auth-store';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+// import Icon from 'react-native-vector-icons/MaterialIcons';
 
 
 export default function AuthScreen() {
@@ -33,7 +33,7 @@ export default function AuthScreen() {
       <View style={styles.card}>
         {canUseGoogleAuth && (
           <TouchableOpacity style={styles.googleBtn} onPress={signInWithGoogle}>
-            <Text style={styles.googleBtnText}><Icon name="google" size={24} color="#4285F4" />  Continue with Google</Text>
+            <Text style={styles.googleBtnText}>Continue with Google</Text>
           </TouchableOpacity>
         )}
 
