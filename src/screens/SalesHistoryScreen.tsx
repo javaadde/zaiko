@@ -14,7 +14,6 @@ import {
 } from 'react-native';
 import {
   Search,
-  ChevronLeft,
   Calendar,
   User,
   Smartphone,
@@ -26,11 +25,9 @@ import {
 } from 'lucide-react-native';
 import { useTheme } from '@/hooks/use-theme';
 import { getSales } from '@/services/sales';
-import { useRouter } from 'expo-router';
 import type { Sale } from '@/types';
 
 export default function SalesHistoryScreen() {
-  const router = useRouter();
   const { colors, shadows, scheme } = useTheme();
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
@@ -134,9 +131,6 @@ export default function SalesHistoryScreen() {
       <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} />
 
       <View style={styles.header}>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.bgCard }]} onPress={() => router.back()}>
-          <ChevronLeft size={20} color={colors.textPrimary} />
-        </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Sales History</Text>
         <View style={{ width: 44 }} />
       </View>
@@ -284,7 +278,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerTitle: { fontSize: 20, fontWeight: '700' },
+  headerTitle: {
+    fontFamily: 'PlayfairDisplay_600SemiBold_Italic',
+    fontSize: 24,
+    fontWeight: '600',
+  },
   filterSection: { paddingHorizontal: 20, gap: 12, marginBottom: 16 },
   searchContainer: {
     flexDirection: 'row',

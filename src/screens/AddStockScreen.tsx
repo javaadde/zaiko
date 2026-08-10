@@ -681,8 +681,9 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontFamily: 'PlayfairDisplay_600SemiBold_Italic',
+    fontSize: 32,
+    fontWeight: '600',
     letterSpacing: -0.4,
   },
   subtitle: {

@@ -3,10 +3,15 @@ import { View, StyleSheet } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
+import { useFonts, PlayfairDisplay_600SemiBold_Italic } from '@expo-google-fonts/playfair-display';
 import { ThemeProvider } from '@/providers/theme-context';
 import { useAuthStore } from '@/stores/auth-store';
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    PlayfairDisplay_600SemiBold_Italic,
+  });
+
   const authLoading = useAuthStore((s) => s.status === 'loading');
   const currentUser = useAuthStore((s) => s.currentUser);
   const currentCompany = useAuthStore((s) => s.currentCompany);
@@ -19,7 +24,7 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || !fontsLoaded) return;
 
     const inAuthGroup = segments[0] === 'auth';
     const inSetupGroup = segments[0] === 'setup';
@@ -32,9 +37,9 @@ export default function RootLayout() {
       // Allow navigating to setup even when a company exists (for creating another one)
       router.replace('/(tabs)');
     }
-  }, [currentUser, currentCompany, authLoading, segments, router]);
+  }, [currentUser, currentCompany, authLoading, fontsLoaded, segments, router]);
 
-  if (authLoading) {
+  if (authLoading || !fontsLoaded) {
     return (
       <GestureHandlerRootView style={styles.root}>
         <ThemeProvider>

@@ -418,8 +418,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   pageTitle: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontFamily: 'PlayfairDisplay_600SemiBold_Italic',
+    fontSize: 28,
+    fontWeight: '600',
     letterSpacing: -0.4,
   },
   pageSubtitle: {
@@ -576,8 +577,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   recentSalesTitle: {
-    fontSize: 19,
-    fontWeight: '700',
+    fontFamily: 'PlayfairDisplay_600SemiBold_Italic',
+    fontSize: 22,
+    fontWeight: '600',
   },
   seeAllText: {
     fontSize: 13,

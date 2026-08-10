@@ -128,6 +128,7 @@ export default function StocksScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         <View style={styles.header}>
+          <Text style={[styles.pageTitle, { color: colors.textPrimary }]}>Inventory Stocks</Text>
           <View style={styles.searchRow}>
             <View style={[styles.searchBox, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
               <Search size={20} color={colors.textSecondary} strokeWidth={2} />
@@ -303,7 +304,14 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: 16,
+  },
+  pageTitle: {
+    fontFamily: 'PlayfairDisplay_600SemiBold_Italic',
+    fontSize: 28,
+    fontWeight: '600',
+    marginBottom: 14,
+    letterSpacing: -0.4,
   },
   searchRow: {
     flexDirection: 'row',

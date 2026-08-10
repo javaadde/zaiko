@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, StatusBar } from 'react-native';
-import { ChevronRight, ArrowLeft, MoreHorizontal, Sun, Moon, SlidersHorizontal, Star } from 'lucide-react-native';
+import { ChevronRight, MoreHorizontal, Sun, Moon, SlidersHorizontal, Star } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/hooks/use-theme';
@@ -25,9 +25,6 @@ export default function SettingsScreen() {
       <ScrollView contentContainerStyle={styles.scroll}>
         {/* Header */}
         <View style={styles.topBar}>
-          <TouchableOpacity style={[styles.iconBtn, { backgroundColor: colors.bgCard }]} onPress={() => router.back()}>
-            <ArrowLeft size={18} color={colors.textPrimary} />
-          </TouchableOpacity>
           <Text style={[styles.header, { color: colors.textPrimary }]}>Settings</Text>
           <TouchableOpacity style={[styles.iconBtn, { backgroundColor: colors.bgCard }]}>
             <MoreHorizontal size={18} color={colors.textPrimary} />
@@ -75,8 +72,8 @@ export default function SettingsScreen() {
 
         {/* Data & Information */}
         <SectionHeader label="Data & Information" />
-        <InfoRow label="Customize Preferences" onPress={() => {}} />
-        <InfoRow label="Data Control & Backup" onPress={() => {}} />
+        <InfoRow label="Archive" onPress={() => router.push('/archived-stocks')} />
+        <InfoRow label="Company Settings" onPress={() => router.push('/setup')} />
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -119,7 +116,11 @@ function InfoRow({ label, onPress }: { label: string; onPress: () => void }) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { padding: 20, paddingTop: 60 },
-  header: { fontSize: 20, fontWeight: '800' },
+  header: {
+    fontFamily: 'PlayfairDisplay_600SemiBold_Italic',
+    fontSize: 26,
+    fontWeight: '600',
+  },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   sectionHeader: { fontSize: 14, fontWeight: '800', marginTop: 22, marginBottom: 12 },

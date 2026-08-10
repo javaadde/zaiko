@@ -12,6 +12,7 @@
     "deploy:indexes": "firebase deploy --only firestore:indexes"
   },
   "dependencies": {
+    "@expo-google-fonts/playfair-display": "^0.4.2",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-firebase/app": "^24.1.1",

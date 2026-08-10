@@ -2,31 +2,15 @@ import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  PieChart,
-  BarChart3,
-  CreditCard,
-  ArrowLeftRight,
+  LayoutDashboard,
+  Package,
+  PlusCircle,
+  History,
+  Settings,
 } from 'lucide-react-native';
 import { useTheme } from '@/hooks/use-theme';
 
 type TabBarProps = any;
-
-// Custom 4-Dots icon matching the exact 5th tab in the reference mockup
-function GridDotsIcon({ focused }: { focused: boolean }) {
-  const dotColor = focused ? '#FFFFFF' : '#A0A6B5';
-  return (
-    <View style={styles.gridDotsWrap}>
-      <View style={styles.gridDotsRow}>
-        <View style={[styles.gridDot, { backgroundColor: dotColor }]} />
-        <View style={[styles.gridDot, { backgroundColor: dotColor }]} />
-      </View>
-      <View style={styles.gridDotsRow}>
-        <View style={[styles.gridDot, { backgroundColor: dotColor }]} />
-        <View style={[styles.gridDot, { backgroundColor: dotColor }]} />
-      </View>
-    </View>
-  );
-}
 
 export default function MindBloomTabBar({ state, descriptors, navigation }: TabBarProps) {
   const { colors } = useTheme();
@@ -38,21 +22,21 @@ export default function MindBloomTabBar({ state, descriptors, navigation }: TabB
   const renderIcon = (name: string, focused: boolean) => {
     const iconColor = focused ? '#FFFFFF' : '#8A90A0';
     const strokeWidth = focused ? 2.5 : 2;
-    const size = 20;
+    const size = 22;
 
     switch (name) {
       case 'index':
-        return <PieChart size={size} color={iconColor} strokeWidth={strokeWidth} />;
+        return <LayoutDashboard size={size} color={iconColor} strokeWidth={strokeWidth} />;
       case 'stocks':
-        return <BarChart3 size={size} color={iconColor} strokeWidth={strokeWidth} />;
+        return <Package size={size} color={iconColor} strokeWidth={strokeWidth} />;
       case 'add':
-        return <CreditCard size={size} color={iconColor} strokeWidth={strokeWidth} />;
+        return <PlusCircle size={24} color={iconColor} strokeWidth={strokeWidth} />;
       case 'history':
-        return <ArrowLeftRight size={size} color={iconColor} strokeWidth={strokeWidth} />;
+        return <History size={size} color={iconColor} strokeWidth={strokeWidth} />;
       case 'settings':
-        return <GridDotsIcon focused={focused} />;
+        return <Settings size={size} color={iconColor} strokeWidth={strokeWidth} />;
       default:
-        return <PieChart size={size} color={iconColor} strokeWidth={strokeWidth} />;
+        return <LayoutDashboard size={size} color={iconColor} strokeWidth={strokeWidth} />;
     }
   };
 
@@ -87,7 +71,6 @@ export default function MindBloomTabBar({ state, descriptors, navigation }: TabB
                 style={[
                   styles.iconCircleTile,
                   isFocused && styles.activeCircleTile,
-                  !isFocused && route.name === 'settings' && styles.settingsInactiveTile,
                 ]}
               >
                 {renderIcon(route.name, isFocused)}
@@ -146,22 +129,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 6,
-  },
-  settingsInactiveTile: {
-    backgroundColor: '#2B2D37', // Dark circular background for 5th tab when inactive
-  },
-  gridDotsWrap: {
-    width: 14,
-    height: 14,
-    justifyContent: 'space-between',
-  },
-  gridDotsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  gridDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
   },
 });
