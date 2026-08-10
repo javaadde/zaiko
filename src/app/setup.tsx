@@ -6,13 +6,17 @@ import { useAuthStore } from '@/stores/auth-store';
 
 export default function SetupScreen() {
   const router = useRouter();
-  const { createCompany, status } = useAuthStore();
+  const { createCompany, status, companies } = useAuthStore();
   const [companyName, setCompanyName] = useState('');
   const [error, setError] = useState('');
 
   const handleCreate = async () => {
     if (!companyName.trim()) {
       setError('Company name is required');
+      return;
+    }
+    if (companies.length >= 3) {
+      setError('You can only create up to 3 companies');
       return;
     }
     try {

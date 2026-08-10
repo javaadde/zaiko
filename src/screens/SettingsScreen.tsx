@@ -89,6 +89,41 @@ function CompanyPickerModal({ visible, onClose, companies, currentCompany, onSwi
   );
 }
 
+function ActionMenuModal({
+  visible,
+  onClose,
+  onProfileSettings,
+  onCompanySettings,
+  onLogout,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onProfileSettings: () => void;
+  onCompanySettings: () => void;
+  onLogout: () => void;
+}) {
+  const { colors } = useTheme();
+
+  return (
+    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
+      <View style={styles.menuOverlay}>
+        <TouchableOpacity style={styles.menuBackdrop} onPress={onClose} activeOpacity={1} />
+        <View style={[styles.menuCard, { backgroundColor: colors.bg }]}> 
+          <TouchableOpacity onPress={onProfileSettings} activeOpacity={0.85} style={[styles.menuItem, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
+            <Text style={[styles.menuItemText, { color: colors.textPrimary }]}>Profile settings</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onCompanySettings} activeOpacity={0.85} style={[styles.menuItem, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
+            <Text style={[styles.menuItemText, { color: colors.textPrimary }]}>Company settings</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onLogout} activeOpacity={0.85} style={[styles.menuItem, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
+            <Text style={[styles.menuItemText, { color: colors.textPrimary }]}>Logout</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 export default function SettingsScreen() {
   const router = useRouter();
   const { colors, scheme } = useTheme();
@@ -98,7 +133,15 @@ export default function SettingsScreen() {
   const companies = useAuthStore((s) => s.companies);
   const currentCompany = useAuthStore((s) => s.currentCompany);
   const switchCompany = useAuthStore((s) => s.switchCompany);
+  const signOut = useAuthStore((s) => s.signOut);
   const [companyModalVisible, setCompanyModalVisible] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  const handleLogout = async () => {
+    setMenuVisible(false);
+    await signOut();
+    router.replace('/auth');
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
@@ -107,7 +150,7 @@ export default function SettingsScreen() {
         {/* Header */}
         <View style={styles.topBar}>
           <Text style={[styles.header, { color: colors.textPrimary }]}>Settings</Text>
-          <TouchableOpacity style={[styles.iconBtn, { backgroundColor: colors.bgCard }]}>
+          <TouchableOpacity style={[styles.iconBtn, { backgroundColor: colors.bgCard }]} onPress={() => setMenuVisible(true)}>
             <MoreHorizontal size={18} color={colors.textPrimary} />
           </TouchableOpacity>
         </View>
@@ -172,6 +215,22 @@ export default function SettingsScreen() {
               setCompanyModalVisible(false);
               router.push('/setup');
             }}
+            />
+        )}
+
+        {menuVisible && (
+          <ActionMenuModal
+            visible={menuVisible}
+            onClose={() => setMenuVisible(false)}
+            onProfileSettings={() => {
+              setMenuVisible(false);
+              router.push('/profile-settings');
+            }}
+            onCompanySettings={() => {
+              setMenuVisible(false);
+              router.push('/company-settings');
+            }}
+            onLogout={handleLogout}
           />
         )}
 
@@ -249,6 +308,11 @@ const styles = StyleSheet.create({
   modalHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: 'rgba(0,0,0,0.15)', alignSelf: 'center', marginBottom: 16 },
   modalTitle: { fontSize: 18, fontWeight: '800', marginBottom: 16, textAlign: 'center' },
   modalList: { maxHeight: 400 },
+  menuOverlay: { flex: 1, justifyContent: 'flex-start', alignItems: 'flex-end', paddingTop: 78, paddingRight: 20 },
+  menuBackdrop: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.24)' },
+  menuCard: { width: 220, borderRadius: 24, padding: 10, gap: 8, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 20, elevation: 8 },
+  menuItem: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 18, borderWidth: 1 },
+  menuItemText: { fontSize: 15, fontWeight: '700' },
   companyRow: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 50, flexDirection: 'row', alignItems: 'center', marginBottom: 10, borderWidth: 1 },
   companyRowContent: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   companyRowName: { fontSize: 15, fontWeight: '700' },

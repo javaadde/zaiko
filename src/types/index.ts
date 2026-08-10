@@ -7,6 +7,7 @@ export type User = {
   personalColor: string;
   photoURL: string | null;
   phoneNumber?: string | null;
+  companyIds?: string[];
   createdAt: TimestampMs;
   updatedAt: TimestampMs;
   deletedAt: TimestampMs | null;
@@ -16,6 +17,9 @@ export type Company = {
   id: string;
   name: string;
   slug: string;
+  description?: string | null;
+  logoUrl?: string | null;
+  logoPath?: string | null;
   ownerId: string;
   members: string[];
   admins: string[];

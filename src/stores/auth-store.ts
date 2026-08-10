@@ -14,6 +14,7 @@ import {
   signOut as firebaseSignOut,
 } from '@react-native-firebase/auth';
 import {
+  arrayUnion,
   collection,
   doc,
   getDocs,
@@ -48,6 +49,8 @@ export type AuthActions = {
   signOut: () => Promise<void>;
   clearError: () => void;
   createCompany: (name: string) => Promise<Company>;
+  updateCompany: (companyId: string, updates: Partial<Pick<Company, 'name' | 'description' | 'logoUrl' | 'logoPath'>>) => Promise<void>;
+  addCompanyMember: (companyId: string, memberId: string) => Promise<void>;
   createEnvironment: (companyId: string, name: string, type: Environment['type']) => Promise<Environment>;
   switchCompany: (companyId: string) => Promise<void>;
   switchEnvironment: (environmentId: string) => Promise<void>;
@@ -55,6 +58,84 @@ export type AuthActions = {
 };
 
 let googleSignInConfigured = false;
+
+function normalizeCompany(id: string, data: any): Company {
+  return {
+    id,
+    name: data.name ?? '',
+    slug: data.slug ?? '',
+    description: data.description ?? null,
+    logoUrl: data.logoUrl ?? null,
+    logoPath: data.logoPath ?? null,
+    ownerId: data.ownerId ?? '',
+    members: data.members ?? [],
+    admins: data.admins ?? [],
+    createdAt: data.createdAt?.toMillis?.() ?? Date.now(),
+    updatedAt: data.updatedAt?.toMillis?.() ?? Date.now(),
+    deletedAt: data.deletedAt?.toMillis?.() ?? null,
+  };
+}
+
+function normalizeEnvironment(companyId: string, id: string, data: any): Environment {
+  return {
+    id,
+    companyId: data.companyId ?? companyId,
+    name: data.name ?? '',
+    type: data.type ?? 'development',
+    members: data.members ?? [],
+    admins: data.admins ?? [],
+    createdAt: data.createdAt?.toMillis?.() ?? Date.now(),
+    updatedAt: data.updatedAt?.toMillis?.() ?? Date.now(),
+    deletedAt: data.deletedAt?.toMillis?.() ?? null,
+  };
+}
+
+async function loadCompaniesForUser(userId: string, userRef: any, companyIds: string[] = []) {
+  const companiesById = new Map<string, Company>();
+
+  const uniqueCompanyIds = Array.from(new Set(companyIds.filter((id): id is string => typeof id === 'string' && id.length > 0)));
+
+  if (uniqueCompanyIds.length > 0) {
+    const snaps = await Promise.all(
+      uniqueCompanyIds.map(async (companyId) => {
+        try {
+          return await doc(db, 'companies', companyId).get();
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    snaps.forEach((snap) => {
+      if (snap?.exists) {
+        companiesById.set(snap.id, normalizeCompany(snap.id, snap.data()));
+      }
+    });
+  }
+
+  try {
+    const rootSnap = await collection(db, 'companies').where('members', 'array-contains', userId).get();
+    rootSnap.docs.forEach((d: any) => {
+      companiesById.set(d.id, normalizeCompany(d.id, d.data()));
+    });
+  } catch {
+    // Ignore and fall back to the per-user index below.
+  }
+
+  try {
+    const userCompaniesSnap = await getDocs(collection(userRef, 'companies'));
+    userCompaniesSnap.docs.forEach((d) => {
+      const company = normalizeCompany(d.id, d.data());
+      if (!companiesById.has(company.id)) {
+        companiesById.set(company.id, company);
+      }
+    });
+  } catch {
+    // Ignore and keep whatever we loaded from the root collection.
+  }
+
+  return Array.from(companiesById.values());
+}
 
 export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
   status: 'loading',
@@ -106,8 +187,7 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
           deletedAt: null,
         };
 
-        // Keep status as 'loading' until profile + workspace data are loaded
-        set({ currentUser: immediateUser, authError: null });
+        set({ status: 'loading', currentUser: immediateUser, authError: null });
 
         const userRef = doc(db, 'users', fbUser.uid);
         const snap = await userRef.get();
@@ -119,26 +199,28 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
           personalColor: data.personalColor ?? immediateUser.personalColor,
           photoURL: data.photoURL ?? immediateUser.photoURL,
           phoneNumber: data.phoneNumber ?? immediateUser.phoneNumber,
+          companyIds: Array.isArray(data.companyIds) ? data.companyIds.filter((id: unknown): id is string => typeof id === 'string') : [],
           createdAt: data.createdAt?.toMillis() ?? Date.now(),
           updatedAt: data.updatedAt?.toMillis() ?? Date.now(),
           deletedAt: data.deletedAt?.toMillis() ?? null,
         };
 
-          const companiesSnap = await getDocs(collection(userRef, 'companies'));
-          const companies: Company[] = companiesSnap.docs.map((d) => {
-          const c = d.data();
-          return {
-            id: d.id,
-            name: c.name ?? '',
-            slug: c.slug ?? '',
-            ownerId: c.ownerId ?? '',
-            members: c.members ?? [],
-            admins: c.admins ?? [],
-            createdAt: c.createdAt?.toMillis() ?? Date.now(),
-            updatedAt: c.updatedAt?.toMillis() ?? Date.now(),
-            deletedAt: c.deletedAt?.toMillis() ?? null,
-          };
-        });
+        const companies = await loadCompaniesForUser(fbUser.uid, userRef, user.companyIds ?? []);
+
+        if ((user.companyIds ?? []).length !== companies.length) {
+          try {
+            await setDoc(
+              userRef,
+              {
+                companyIds: companies.map((company) => company.id),
+                updatedAt: serverTimestamp(),
+              },
+              { merge: true },
+            );
+          } catch {
+            // Best-effort backfill only.
+          }
+        }
 
         const savedCompanyId = getActiveCompanyId();
         const activeCompanyId = companies.some((c) => c.id === savedCompanyId) ? savedCompanyId : (companies[0]?.id ?? null);
@@ -152,20 +234,7 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
             .collection('environments')
             .where('members', 'array-contains', fbUser.uid)
             .get();
-          environments = envSnap.docs.map((d) => {
-            const e = d.data();
-            return {
-              id: d.id,
-              companyId: e.companyId ?? activeCompany.id,
-              name: e.name ?? '',
-              type: e.type ?? 'development',
-              members: e.members ?? [],
-              admins: e.admins ?? [],
-              createdAt: e.createdAt?.toMillis() ?? Date.now(),
-              updatedAt: e.updatedAt?.toMillis() ?? Date.now(),
-              deletedAt: e.deletedAt?.toMillis() ?? null,
-            };
-          });
+          environments = envSnap.docs.map((d) => normalizeEnvironment(activeCompany.id, d.id, d.data()));
         }
 
         const savedEnvId = getActiveEnvironmentId();
@@ -296,6 +365,10 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
     const user = get().currentUser;
     if (!user) throw new Error('Not authenticated');
 
+    if (get().companies.length >= 3) {
+      throw new Error('You can only create up to 3 companies');
+    }
+
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     const companyRef = doc(collection(db, 'companies'));
     const companyId = companyRef.id;
@@ -305,6 +378,9 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
       batch.set(companyRef, {
         name,
         slug,
+        description: null,
+        logoUrl: null,
+        logoPath: null,
         ownerId: user.uid,
         members: [user.uid],
         admins: [user.uid],
@@ -315,12 +391,24 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
       batch.set(doc(db, 'users', user.uid, 'companies', companyId), {
         name,
         slug,
+        description: null,
+        logoUrl: null,
+        logoPath: null,
         ownerId: user.uid,
         members: [user.uid],
         admins: [user.uid],
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+
+      batch.set(
+        doc(db, 'users', user.uid),
+        {
+          companyIds: arrayUnion(companyId),
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true },
+      );
 
       batch.set(doc(db, 'companies', companyId, 'environments', 'development'), {
         companyId,
@@ -352,6 +440,9 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
       id: companyId,
       name,
       slug,
+      description: null,
+      logoUrl: null,
+      logoPath: null,
       ownerId: user.uid,
       members: [user.uid],
       admins: [user.uid],
@@ -400,7 +491,66 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
       },
     }));
 
+    setActiveCompanyId(companyId);
+
     return company;
+  },
+
+  updateCompany: async (companyId, updates) => {
+    const user = get().currentUser;
+    if (!user) throw new Error('Not authenticated');
+
+    const payload = {
+      ...updates,
+      updatedAt: serverTimestamp(),
+    };
+
+    await Promise.all([
+      setDoc(doc(db, 'companies', companyId), payload, { merge: true }),
+      setDoc(doc(db, 'users', user.uid, 'companies', companyId), payload, { merge: true }),
+    ]);
+
+    set((state) => ({
+      companies: state.companies.map((company) =>
+        company.id === companyId ? { ...company, ...updates, updatedAt: Date.now() } : company,
+      ),
+      currentCompany: state.currentCompany?.id === companyId
+        ? { ...state.currentCompany, ...updates, updatedAt: Date.now() }
+        : state.currentCompany,
+    }));
+  },
+
+  addCompanyMember: async (companyId, memberId) => {
+    const user = get().currentUser;
+    if (!user) throw new Error('Not authenticated');
+
+    const member = memberId.trim();
+    if (!member) throw new Error('Employee UID is required');
+
+    const payload = {
+      members: arrayUnion(member),
+      updatedAt: serverTimestamp(),
+    };
+
+    await Promise.all([
+      setDoc(doc(db, 'companies', companyId), payload, { merge: true }),
+      setDoc(doc(db, 'users', user.uid, 'companies', companyId), payload, { merge: true }),
+    ]);
+
+    set((state) => ({
+      companies: state.companies.map((company) =>
+        company.id === companyId
+          ? { ...company, members: Array.from(new Set([...company.members, member])), updatedAt: Date.now() }
+          : company,
+      ),
+      currentCompany: state.currentCompany?.id === companyId
+        ? {
+            ...state.currentCompany,
+            members: Array.from(new Set([...state.currentCompany.members, member])),
+            updatedAt: Date.now(),
+          }
+        : state.currentCompany,
+    }));
   },
 
   createEnvironment: async (companyId, name, type) => {
@@ -452,21 +602,8 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
         .where('members', 'array-contains', user.uid)
         .get();
 
-      environments = envSnap.docs.map((d) => {
-        const e = d.data();
-        return {
-          id: d.id,
-          companyId: e.companyId ?? companyId,
-          name: e.name ?? '',
-          type: e.type ?? 'development',
-          members: e.members ?? [],
-          admins: e.admins ?? [],
-          createdAt: e.createdAt?.toMillis() ?? Date.now(),
-          updatedAt: e.updatedAt?.toMillis() ?? Date.now(),
-          deletedAt: e.deletedAt?.toMillis() ?? null,
-        };
-      });
-    } catch (err) {
+      environments = envSnap.docs.map((d) => normalizeEnvironment(companyId, d.id, d.data()));
+    } catch {
       // Gracefully handle rules issues; still switch company
       environments = [];
     }

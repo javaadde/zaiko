@@ -13,7 +13,7 @@ export default function RootLayout() {
   });
 
   const authLoading = useAuthStore((s) => s.status === 'loading');
-  const currentUser = useAuthStore((s) => s.currentUser);
+  const status = useAuthStore((s) => s.status);
   const currentCompany = useAuthStore((s) => s.currentCompany);
   const segments = useSegments();
   const router = useRouter();
@@ -29,15 +29,15 @@ export default function RootLayout() {
     const inAuthGroup = segments[0] === 'auth';
     const inSetupGroup = segments[0] === 'setup';
 
-    if (!currentUser && !inAuthGroup) {
+    if (status !== 'authenticated' && !inAuthGroup) {
       router.replace('/auth');
-    } else if (currentUser && !currentCompany && !inSetupGroup) {
+    } else if (status === 'authenticated' && !currentCompany && !inSetupGroup) {
       router.replace('/setup');
-    } else if (currentUser && currentCompany && inAuthGroup) {
+    } else if (status === 'authenticated' && currentCompany && inAuthGroup) {
       // Allow navigating to setup even when a company exists (for creating another one)
       router.replace('/(tabs)');
     }
-  }, [currentUser, currentCompany, authLoading, fontsLoaded, segments, router]);
+  }, [status, currentCompany, authLoading, fontsLoaded, segments, router]);
 
   if (authLoading || !fontsLoaded) {
     return (
@@ -62,6 +62,8 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="auth" />
           <Stack.Screen name="setup" />
+          <Stack.Screen name="profile-settings" />
+          <Stack.Screen name="company-settings" />
           <Stack.Screen name="sell" />
           <Stack.Screen name="sell-verify/[id]" />
           <Stack.Screen name="archived-stocks" />
