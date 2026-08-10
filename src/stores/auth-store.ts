@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import Constants from 'expo-constants';
 import type { User, Company, Environment } from '@/types';
 import { getUserFriendlyError } from '@/lib/errors';
-import { setUserName } from '@/lib/mmkv';
+import { getActiveCompanyId, getActiveEnvironmentId, setActiveCompanyId, setActiveEnvironmentId, setUserName } from '@/lib/mmkv';
 import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
@@ -140,7 +140,8 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
           };
         });
 
-        const activeCompanyId = companies[0]?.id ?? null;
+        const savedCompanyId = getActiveCompanyId();
+        const activeCompanyId = companies.some((c) => c.id === savedCompanyId) ? savedCompanyId : (companies[0]?.id ?? null);
         const activeCompany = companies.find((c) => c.id === activeCompanyId) ?? null;
 
         let environments: Environment[] = [];
@@ -167,7 +168,8 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
           });
         }
 
-        const activeEnvironment = environments[0] ?? null;
+        const savedEnvId = getActiveEnvironmentId();
+        const activeEnvironment = environments.find((e) => e.id === savedEnvId) ?? environments[0] ?? null;
 
         set({
           currentUser: user,
@@ -474,12 +476,14 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
       environments,
       currentEnvironment: environments[0] ?? null,
     });
+    setActiveCompanyId(companyId);
   },
 
   switchEnvironment: async (environmentId) => {
     const env = get().environments.find((e) => e.id === environmentId) ?? null;
     if (!env) return;
     set({ currentEnvironment: env });
+    setActiveEnvironmentId(environmentId);
   },
 
   refreshProfile: async () => {

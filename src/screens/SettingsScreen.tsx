@@ -1,15 +1,92 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, StatusBar } from 'react-native';
-import { ChevronRight, MoreHorizontal, Sun, Moon, SlidersHorizontal, Star } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, StatusBar, Modal } from 'react-native';
+import { ChevronRight, MoreHorizontal, Sun, Moon, SlidersHorizontal, Star, Building2, Plus, Check } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePreferenceStore } from '@/stores/preference-store';
+import type { Company } from '@/types';
 
 function SectionHeader({ label }: { label: string }) {
   const { colors } = useTheme();
   return <Text style={[styles.sectionHeader, { color: colors.textPrimary }]}>{label}</Text>;
+}
+
+function CompanyRow({ company, isActive, onPress }: { company: Company; isActive: boolean; onPress: () => void }) {
+  const { colors } = useTheme();
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.85}
+      style={[
+        styles.companyRow,
+        { backgroundColor: colors.bgCard, borderColor: colors.border },
+        isActive && { backgroundColor: colors.pastelYellow, borderColor: colors.pastelYellow },
+      ]}
+    >
+      <Building2 size={20} color={isActive ? '#18191E' : colors.textPrimary} />
+      <View style={{ flex: 1, marginLeft: 12 }}>
+        <Text style={[styles.companyRowName, { color: isActive ? '#18191E' : colors.textPrimary }]}>
+          {company.name}
+        </Text>
+        <Text style={[styles.companyRowSlug, { color: isActive ? 'rgba(24,25,30,0.7)' : colors.textSecondary }]}>
+          {company.slug}
+        </Text>
+      </View>
+      {isActive && (
+        <View style={[styles.checkBadge, { backgroundColor: 'rgba(24,25,30,0.15)' }]}>
+          <Check size={16} color="#18191E" />
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+}
+
+function CompanyPickerModal({ visible, onClose, companies, currentCompany, onSwitchCompany, onCreateNew }: {
+  visible: boolean;
+  onClose: () => void;
+  companies: Company[];
+  currentCompany: Company | null;
+  onSwitchCompany: (id: string) => void;
+  onCreateNew: () => void;
+}) {
+  const { colors } = useTheme();
+  return (
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <View style={styles.modalOverlay}>
+        <TouchableOpacity style={styles.modalBackdrop} onPress={onClose} activeOpacity={1} />
+        <View style={[styles.modalContent, { backgroundColor: colors.bg }]}>
+          <View style={styles.modalHandle} />
+          <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Select Company</Text>
+          <ScrollView style={styles.modalList} showsVerticalScrollIndicator={false}>
+            {companies.map((company) => (
+              <CompanyRow
+                key={company.id}
+                company={company}
+                isActive={currentCompany?.id === company.id}
+                onPress={() => {
+                  onSwitchCompany(company.id);
+                  onClose();
+                }}
+              />
+            ))}
+            <TouchableOpacity
+              onPress={() => {
+                onClose();
+                onCreateNew();
+              }}
+              activeOpacity={0.85}
+              style={[styles.createCompanyBtn, { backgroundColor: colors.bgCard, borderColor: colors.border }]}
+            >
+              <Plus size={20} color={colors.textPrimary} />
+              <Text style={[styles.createCompanyText, { color: colors.textPrimary }]}>Create New Company</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
 }
 
 export default function SettingsScreen() {
@@ -18,6 +95,10 @@ export default function SettingsScreen() {
   const user = useAuthStore((s) => s.currentUser);
   const themeMode = usePreferenceStore((s) => s.themeMode);
   const setThemeMode = usePreferenceStore((s) => s.setThemeMode);
+  const companies = useAuthStore((s) => s.companies);
+  const currentCompany = useAuthStore((s) => s.currentCompany);
+  const switchCompany = useAuthStore((s) => s.switchCompany);
+  const [companyModalVisible, setCompanyModalVisible] = useState(false);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
@@ -70,10 +151,29 @@ export default function SettingsScreen() {
           <AppearanceOption label="Light" active={themeMode === 'light'} onPress={() => setThemeMode('light')} icon={<Sun size={18} color={themeMode === 'light' ? '#18191E' : colors.textPrimary} />} />
         </View>
 
+        {/* Company */}
+        <SectionHeader label="Company" />
+        <InfoRow  label={currentCompany ? currentCompany.name : 'Switch Company'} onPress={() => setCompanyModalVisible(true)}  />
+
         {/* Data & Information */}
-        <SectionHeader label="Data & Information" />
+        <SectionHeader label="Archived Stocks" />
         <InfoRow label="Archive" onPress={() => router.push('/archived-stocks')} />
-        <InfoRow label="Company Settings" onPress={() => router.push('/setup')} />
+
+        {companyModalVisible && (
+          <CompanyPickerModal
+            visible={companyModalVisible}
+            onClose={() => setCompanyModalVisible(false)}
+            companies={companies}
+            currentCompany={currentCompany}
+            onSwitchCompany={async (id) => {
+              await switchCompany(id);
+            }}
+            onCreateNew={() => {
+              setCompanyModalVisible(false);
+              router.push('/setup');
+            }}
+          />
+        )}
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -138,9 +238,22 @@ const styles = StyleSheet.create({
   planBtnGrad: { paddingVertical: 10, paddingHorizontal: 14, borderRadius: 18, backgroundColor: '#18191E' },
   planBtnText: { fontSize: 12, fontWeight: '800', color: '#FFFFFF' },
   appearanceRow: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 8 },
-  appearanceOption: { width: 56, height: 56, borderRadius: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
+  appearanceOption: { width: 56, height: 56, borderRadius: 50, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
   appearanceLabel: { fontSize: 12, fontWeight: '600', marginTop: 6 },
-  infoRow: { paddingVertical: 16, paddingHorizontal: 18, borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, borderWidth: 1 },
+  infoRow: { paddingVertical: 16, paddingHorizontal: 18, borderRadius: 34, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, borderWidth: 1 },
   infoRowText: { fontSize: 15, fontWeight: '700' },
   infoRowIcon: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  modalOverlay: { flex: 1, justifyContent: 'flex-end' },
+  modalBackdrop: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)' },
+  modalContent: { borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, paddingBottom: 34, maxHeight: '80%' },
+  modalHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: 'rgba(0,0,0,0.15)', alignSelf: 'center', marginBottom: 16 },
+  modalTitle: { fontSize: 18, fontWeight: '800', marginBottom: 16, textAlign: 'center' },
+  modalList: { maxHeight: 400 },
+  companyRow: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 50, flexDirection: 'row', alignItems: 'center', marginBottom: 10, borderWidth: 1 },
+  companyRowContent: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  companyRowName: { fontSize: 15, fontWeight: '700' },
+  companyRowSlug: { fontSize: 12, fontWeight: '600', marginTop: 2 },
+  checkBadge: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  createCompanyBtn: { paddingVertical: 16, paddingHorizontal: 18, borderRadius: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 8, borderWidth: 1 },
+  createCompanyText: { fontSize: 15, fontWeight: '700', marginLeft: 10 },
 });
