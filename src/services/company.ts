@@ -1,13 +1,10 @@
-import { getApp } from '@react-native-firebase/app';
-import { getDownloadURL, getStorage, putFile, ref as storageRef } from '@react-native-firebase/storage';
+import { uploadImageToCloudinary } from '@/lib/cloudinary';
 
-const firebaseApp = getApp();
-const storage = getStorage(firebaseApp);
-
-export async function uploadCompanyLogo(companyId: string, uri: string) {
-  const path = `company-logos/${companyId}`;
-  const ref = storageRef(storage, path);
-  await putFile(ref, uri);
-  const logoUrl = await getDownloadURL(ref);
-  return { logoUrl, logoPath: path };
+export async function uploadCompanyLogo(companyId: string, asset: { uri: string; mimeType?: string | null; fileName?: string | null }) {
+  const path = `${companyId}/logo_${Date.now()}`;
+  const upload = await uploadImageToCloudinary(asset, {
+    folder: 'company-logos',
+    publicId: path,
+  });
+  return { logoUrl: upload.url, logoPath: upload.path };
 }

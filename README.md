@@ -33,7 +33,8 @@ Zaiko is an Expo + React Native inventory app built for a mobile retail workflow
 
 - Expo Router
 - React Native
-- Firebase Auth, Firestore, Storage, Crashlytics, and Remote Config
+- Firebase Auth, Firestore, Crashlytics, and Remote Config
+- Cloudinary for direct image uploads
 - Zustand for local state
 - MMKV for fast persistence
 - `lucide-react-native` for iconography
@@ -76,7 +77,7 @@ Also make sure these Firebase services are enabled:
 
 - Authentication providers for Google, Apple, and email/password
 - Firestore database
-- Storage bucket
+- Storage bucket if you still use Firebase Storage elsewhere
 
 ### Environment
 
@@ -87,6 +88,13 @@ EXPO_PUBLIC_API_BASE_URL=https://your-api.example.com/api
 ```
 
 If not set, the app uses the local development URL in development and the hosted production URL in release builds.
+
+For image uploads, set:
+
+```bash
+EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
+EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET=your_unsigned_preset
+```
 
 ### Run
 

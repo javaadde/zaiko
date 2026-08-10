@@ -1,14 +1,13 @@
 import { getApp } from '@react-native-firebase/app';
 import { tsToMs, serverTs } from '@/lib/firestore';
+import { uploadImageToCloudinary } from '@/lib/cloudinary';
 import type { InventoryItem } from '@/types';
 import type { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 import { useAuthStore } from '@/stores/auth-store';
 import { collection, doc, getFirestore, increment } from '@react-native-firebase/firestore';
-import { getDownloadURL, getStorage, putFile, ref as storageRef } from '@react-native-firebase/storage';
 
 const firebaseApp = getApp();
 const db = getFirestore(firebaseApp);
-const storage = getStorage(firebaseApp);
 
 export function getEnvRef() {
   const company = useAuthStore.getState().currentCompany;
@@ -155,11 +154,11 @@ export async function unarchiveInventoryItem(id: string) {
   });
 }
 
-export async function uploadInventoryImage(uri: string, path: string) {
-  const ref = storageRef(storage, `inventory/${path}`);
-  await putFile(ref, uri);
-  const url = await getDownloadURL(ref);
-  return { url, path };
+export async function uploadInventoryImage(asset: { uri: string; mimeType?: string | null; fileName?: string | null }, path: string) {
+  return uploadImageToCloudinary(asset, {
+    folder: 'inventory',
+    publicId: path,
+  });
 }
 
 export async function getInventoryStats() {

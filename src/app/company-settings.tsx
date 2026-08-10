@@ -91,7 +91,11 @@ function CompanySettingsContent({ company }: { company: Company }) {
 
     setUploadingLogo(true);
     try {
-      const upload = await uploadCompanyLogo(company.id, result.assets[0].uri);
+      const upload = await uploadCompanyLogo(company.id, {
+        uri: result.assets[0].uri,
+        mimeType: result.assets[0].mimeType ?? null,
+        fileName: result.assets[0].fileName ?? null,
+      });
       await updateCompany(company.id, upload);
     } catch (err) {
       Alert.alert('Logo upload failed', err instanceof Error ? err.message : 'Could not upload logo');
@@ -186,23 +190,23 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { padding: 20, paddingTop: 56, gap: 14 },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
-  title: { fontSize: 22, fontWeight: '800' },
-  iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  title: {  fontFamily: 'PlayfairDisplay_600SemiBold_Italic', fontSize: 22, },
+  iconBtn: { width: 40, height: 40, borderRadius: 30, alignItems: 'center', justifyContent: 'center' },
   spacer: { width: 40 },
   card: { borderRadius: 28, padding: 18, borderWidth: 1, gap: 14 },
-  logoWrap: { width: 96, height: 96, borderRadius: 28, alignItems: 'center', justifyContent: 'center', alignSelf: 'center', borderWidth: 1, overflow: 'hidden' },
+  logoWrap: { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center', alignSelf: 'center', borderWidth: 1, overflow: 'hidden' },
   logo: { width: '100%', height: '100%' },
-  sectionTitle: { fontSize: 16, fontWeight: '800' },
+  sectionTitle: { fontSize: 16, fontWeight: '800',fontFamily: 'PlayfairDisplay_600SemiBold_Italic' },
   helper: { fontSize: 12, fontWeight: '500' },
-  input: { borderRadius: 18, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, fontWeight: '600' },
+  input: { borderRadius: 28, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, fontWeight: '600' },
   textArea: { borderRadius: 18, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, fontWeight: '600', minHeight: 110, textAlignVertical: 'top' },
-  primaryBtn: { minHeight: 48, borderRadius: 18, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
+  primaryBtn: { minHeight: 48, borderRadius: 28, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
   primaryBtnText: { color: '#fff', fontWeight: '800', fontSize: 14 },
   memberRow: { flexDirection: 'row', gap: 10, alignItems: 'center' },
   memberInput: { flex: 1 },
-  addBtn: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  addBtn: { width: 48, height: 48, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
   memberList: { gap: 10 },
-  memberChip: { borderRadius: 18, paddingHorizontal: 14, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1 },
+  memberChip: { borderRadius: 28, paddingHorizontal: 14, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1 },
   memberText: { fontSize: 13, fontWeight: '700', flex: 1 },
   emptyTitle: { fontSize: 20, fontWeight: '800', textAlign: 'center', marginTop: 80 },
 });

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -16,17 +16,12 @@ import {
   Modal,
   FlatList,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Camera, Image as ImageIcon, Trash2, X, Plus, ImagePlus, Check, ChevronDown, ChevronUp, Smartphone } from 'lucide-react-native';
+import { Camera, Image as ImageIcon, X, Plus, ImagePlus, Check, ChevronDown, ChevronUp, Smartphone } from 'lucide-react-native';
 import { useTheme } from '@/hooks/use-theme';
-import { getInventoryItem, createInventoryItem, updateInventoryItem, uploadInventoryImage, deleteInventoryItem } from '@/services/inventory';
-import { brandCategories, brandPalette } from '@/data/brands';
+import { getInventoryItem, createInventoryItem, updateInventoryItem, uploadInventoryImage } from '@/services/inventory';
 import { playSuccessSound } from '@/lib/play-success-sound';
-import type { InventoryItem } from '@/types';
-
-type Props = {};
 
 const BRANDS = [
   { name: 'Apple', logo: require('../../assets/logos/apple.png') },
@@ -45,7 +40,7 @@ const BRANDS = [
 export default function AddStockScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { colors, scheme, radii, shadows } = useTheme();
+  const { colors, scheme } = useTheme();
   const isEditing = !!params.id;
 
   const [loading, setLoading] = useState(false);
@@ -62,6 +57,7 @@ export default function AddStockScreen() {
   const [minWholesalePrice, setMinWholesalePrice] = useState('');
   const [minRetailPrice, setMinRetailPrice] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [imageAsset, setImageAsset] = useState<{ uri: string; mimeType?: string | null; fileName?: string | null } | null>(null);
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
   const [otherBrandName, setOtherBrandName] = useState('');
   const [showBrandModal, setShowBrandModal] = useState(false);
@@ -70,15 +66,24 @@ export default function AddStockScreen() {
   const [imei, setImei] = useState('');
   const [color, setColor] = useState('');
 
-  useEffect(() => {
-    if (isEditing) {
-      loadItem(params.id as string);
-    } else {
-      resetForm();
-    }
-  }, [params.id]);
+  const resetForm = useCallback(() => {
+    setModel('');
+    setBrand('');
+    setPurchasePrice('');
+    setSellingPrice('');
+    setQuantity('');
+    setSupplier('');
+    setMinWholesalePrice('');
+    setMinRetailPrice('');
+    setImageUri(null);
+    setImageAsset(null);
+    setExistingImageUrl(null);
+    setOtherBrandName('');
+    setImei('');
+    setColor('');
+  }, []);
 
-  const loadItem = async (id: string) => {
+  const loadItem = useCallback(async (id: string) => {
     setFetching(true);
     try {
       const item = await getInventoryItem(id);
@@ -99,34 +104,31 @@ export default function AddStockScreen() {
       setMinWholesalePrice(item.minWholesalePrice ? String(item.minWholesalePrice) : '');
       setMinRetailPrice(item.minRetailPrice ? String(item.minRetailPrice) : '');
       setExistingImageUrl(item.imageUrl || null);
+      setImageAsset(null);
       setImei(item.imei || '');
       setColor(item.color || '');
       if (item.minWholesalePrice || item.minRetailPrice) {
         setShowPricingRules(true);
       }
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to load item details');
       router.back();
     } finally {
       setFetching(false);
     }
-  };
+  }, [router]);
 
-  const resetForm = () => {
-    setModel('');
-    setBrand('');
-    setPurchasePrice('');
-    setSellingPrice('');
-    setQuantity('');
-    setSupplier('');
-    setMinWholesalePrice('');
-    setMinRetailPrice('');
-    setImageUri(null);
-    setExistingImageUrl(null);
-    setOtherBrandName('');
-    setImei('');
-    setColor('');
-  };
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isEditing) {
+        void loadItem(params.id as string);
+      } else {
+        resetForm();
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [params.id, isEditing, loadItem, resetForm]);
 
   const requestCameraPermission = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -157,6 +159,11 @@ export default function AddStockScreen() {
     });
     if (!result.canceled && result.assets[0]) {
       setImageUri(result.assets[0].uri);
+      setImageAsset({
+        uri: result.assets[0].uri,
+        mimeType: result.assets[0].mimeType ?? null,
+        fileName: result.assets[0].fileName ?? null,
+      });
       setExistingImageUrl(null);
     }
     setShowImageModal(false);
@@ -173,15 +180,21 @@ export default function AddStockScreen() {
     });
     if (!result.canceled && result.assets[0]) {
       setImageUri(result.assets[0].uri);
+      setImageAsset({
+        uri: result.assets[0].uri,
+        mimeType: result.assets[0].mimeType ?? null,
+        fileName: result.assets[0].fileName ?? null,
+      });
       setExistingImageUrl(null);
     }
     setShowImageModal(false);
   };
 
   const uploadImageIfNeeded = async (): Promise<{ url?: string; path?: string } | undefined> => {
-    if (!imageUri) return {};
-    const path = `inventory/${Date.now()}_${imageUri.split('/').pop()}`;
-    const result = await uploadInventoryImage(imageUri, path);
+    if (!imageAsset) return {};
+    const fileBase = imageAsset.fileName?.replace(/\.[^.]+$/, '') || imageAsset.uri.split('/').pop() || 'image';
+    const path = `${Date.now()}_${fileBase}`;
+    const result = await uploadInventoryImage(imageAsset, path);
     return result;
   };
 
@@ -901,4 +914,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-
