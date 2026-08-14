@@ -8,6 +8,7 @@ export type User = {
   photoURL: string | null;
   phoneNumber?: string | null;
   companyIds?: string[];
+  createdCompanyIds?: string[];
   createdAt: TimestampMs;
   updatedAt: TimestampMs;
   deletedAt: TimestampMs | null;

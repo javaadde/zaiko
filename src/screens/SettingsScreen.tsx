@@ -43,52 +43,6 @@ function CompanyRow({ company, isActive, onPress }: { company: Company; isActive
   );
 }
 
-function CompanyPickerModal({ visible, onClose, companies, currentCompany, onSwitchCompany, onCreateNew }: {
-  visible: boolean;
-  onClose: () => void;
-  companies: Company[];
-  currentCompany: Company | null;
-  onSwitchCompany: (id: string) => void;
-  onCreateNew: () => void;
-}) {
-  const { colors } = useTheme();
-  return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <TouchableOpacity style={styles.modalBackdrop} onPress={onClose} activeOpacity={1} />
-        <View style={[styles.modalContent, { backgroundColor: colors.bg }]}>
-          <View style={styles.modalHandle} />
-          <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Select Company</Text>
-          <ScrollView style={styles.modalList} showsVerticalScrollIndicator={false}>
-            {companies.map((company) => (
-              <CompanyRow
-                key={company.id}
-                company={company}
-                isActive={currentCompany?.id === company.id}
-                onPress={() => {
-                  onSwitchCompany(company.id);
-                  onClose();
-                }}
-              />
-            ))}
-            <TouchableOpacity
-              onPress={() => {
-                onClose();
-                onCreateNew();
-              }}
-              activeOpacity={0.85}
-              style={[styles.createCompanyBtn, { backgroundColor: colors.bgCard, borderColor: colors.border }]}
-            >
-              <Plus size={20} color={colors.textPrimary} />
-              <Text style={[styles.createCompanyText, { color: colors.textPrimary }]}>Create New Company</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
 function ActionMenuModal({
   visible,
   onClose,
@@ -134,7 +88,6 @@ export default function SettingsScreen() {
   const currentCompany = useAuthStore((s) => s.currentCompany);
   const switchCompany = useAuthStore((s) => s.switchCompany);
   const signOut = useAuthStore((s) => s.signOut);
-  const [companyModalVisible, setCompanyModalVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
 
   const handleLogout = async () => {
@@ -195,28 +148,31 @@ export default function SettingsScreen() {
         </View>
 
         {/* Company */}
-        <SectionHeader label="Company" />
-        <InfoRow  label={currentCompany ? currentCompany.name : 'Switch Company'} onPress={() => setCompanyModalVisible(true)}  />
+        <SectionHeader label="Companies" />
+        {companies.map((company) => (
+          <CompanyRow
+            key={company.id}
+            company={company}
+            isActive={currentCompany?.id === company.id}
+            onPress={() => {
+              if (company.id !== currentCompany?.id) {
+                void switchCompany(company.id);
+              }
+            }}
+          />
+        ))}
+        <TouchableOpacity
+          onPress={() => router.push('/setup')}
+          activeOpacity={0.85}
+          style={[styles.createCompanyBtn, { backgroundColor: colors.bgCard, borderColor: colors.border }]}
+        >
+          <Plus size={20} color={colors.textPrimary} />
+          <Text style={[styles.createCompanyText, { color: colors.textPrimary }]}>Create New Company</Text>
+        </TouchableOpacity>
 
         {/* Data & Information */}
         <SectionHeader label="Archived Stocks" />
         <InfoRow label="Archive" onPress={() => router.push('/archived-stocks')} />
-
-        {companyModalVisible && (
-          <CompanyPickerModal
-            visible={companyModalVisible}
-            onClose={() => setCompanyModalVisible(false)}
-            companies={companies}
-            currentCompany={currentCompany}
-            onSwitchCompany={async (id) => {
-              await switchCompany(id);
-            }}
-            onCreateNew={() => {
-              setCompanyModalVisible(false);
-              router.push('/setup');
-            }}
-            />
-        )}
 
         {menuVisible && (
           <ActionMenuModal

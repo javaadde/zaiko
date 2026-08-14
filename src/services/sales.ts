@@ -19,6 +19,10 @@ export async function createSale(sale: Omit<Sale, 'id' | 'createdAt' | 'updatedA
 }
 
 export async function getSales() {
+  const { currentCompany, currentEnvironment } = useAuthStore.getState();
+  if (!currentCompany || !currentEnvironment) {
+    return [];
+  }
   const snap = await getDocs(getEnvRef().collection('sales').orderBy('saleDate', 'desc'));
   return snap.docs.map((d) => {
     const data = d.data();

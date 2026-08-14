@@ -19,6 +19,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { getInventoryItems, deleteInventoryItem } from '@/services/inventory';
 import { brandCategories, brandPalette } from '@/data/brands';
 import StockCard from '@/components/StockCard';
+import { useAuthStore } from '@/stores/auth-store';
 import type { InventoryItem } from '@/types';
 
 type FilterStatus = 'all' | 'in_stock' | 'low' | 'out_of_stock';
@@ -61,6 +62,8 @@ function CategoryIcon({ label, icon, active, onPress, isImage, bgColor }: Catego
 export default function StocksScreen() {
   const router = useRouter();
   const { colors, scheme } = useTheme();
+  const currentCompany = useAuthStore((s) => s.currentCompany);
+  const currentEnvironment = useAuthStore((s) => s.currentEnvironment);
   const [search, setSearch] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('All');
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -71,6 +74,13 @@ export default function StocksScreen() {
   const [isFilterVisible, setIsFilterVisible] = useState(false);
 
   const fetchItems = useCallback(async () => {
+    if (!currentCompany || !currentEnvironment) {
+      setItems([]);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+
     try {
       const data = await getInventoryItems({
         brand: selectedBrand !== 'All' ? selectedBrand : undefined,
@@ -84,7 +94,7 @@ export default function StocksScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [selectedBrand, search, filterStatus]);
+  }, [currentCompany, currentEnvironment, selectedBrand, search, filterStatus]);
 
   useFocusEffect(
     useCallback(() => {

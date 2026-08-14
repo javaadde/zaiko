@@ -20,6 +20,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Camera, Image as ImageIcon, X, Plus, ImagePlus, Check, ChevronDown, ChevronUp, Smartphone } from 'lucide-react-native';
 import { useTheme } from '@/hooks/use-theme';
+import { useAuthStore } from '@/stores/auth-store';
 import { getInventoryItem, createInventoryItem, updateInventoryItem, uploadInventoryImage } from '@/services/inventory';
 import { playSuccessSound } from '@/lib/play-success-sound';
 
@@ -42,6 +43,9 @@ export default function AddStockScreen() {
   const params = useLocalSearchParams();
   const { colors, scheme } = useTheme();
   const isEditing = !!params.id;
+  const currentCompany = useAuthStore((s) => s.currentCompany);
+  const currentEnvironment = useAuthStore((s) => s.currentEnvironment);
+  const currentUser = useAuthStore((s) => s.currentUser);
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
@@ -121,6 +125,11 @@ export default function AddStockScreen() {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (isEditing) {
+        if (!currentCompany || !currentEnvironment) {
+          Alert.alert('Select Company', 'Choose an active company and environment before editing stock.');
+          router.back();
+          return;
+        }
         void loadItem(params.id as string);
       } else {
         resetForm();
@@ -128,7 +137,7 @@ export default function AddStockScreen() {
     }, 0);
 
     return () => clearTimeout(timer);
-  }, [params.id, isEditing, loadItem, resetForm]);
+  }, [currentCompany, currentEnvironment, loadItem, params.id, resetForm, isEditing, router]);
 
   const requestCameraPermission = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -199,6 +208,11 @@ export default function AddStockScreen() {
   };
 
   const handleSave = async () => {
+    if (!currentCompany || !currentEnvironment) {
+      Alert.alert('No Active Environment', 'Select a company and environment before saving stock.');
+      return;
+    }
+
     if (!model.trim()) {
       Alert.alert('Missing Field', 'Please enter the model name.');
       return;
@@ -226,8 +240,8 @@ export default function AddStockScreen() {
     try {
       const upload = await uploadImageIfNeeded();
       const itemData = {
-        companyId: '',
-        environmentId: '',
+        companyId: currentCompany.id,
+        environmentId: currentEnvironment.id,
         model: model.trim(),
         brand: brand === 'Other' ? otherBrandName.trim() : brand.trim(),
         imei: imei || null,
@@ -243,7 +257,7 @@ export default function AddStockScreen() {
         imageUrl: upload?.url || existingImageUrl || null,
         imagePath: upload?.path || null,
         isArchived: false,
-        createdBy: '',
+        createdBy: currentUser?.uid ?? '',
       };
 
       if (isEditing) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -23,14 +23,17 @@ import {
   X,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useTheme } from '@/hooks/use-theme';
 import { getInventoryItems, unarchiveInventoryItem, deleteInventoryItem } from '@/services/inventory';
+import { useAuthStore } from '@/stores/auth-store';
 import type { InventoryItem } from '@/types';
 
 export default function ArchivedStocksScreen() {
   const router = useRouter();
   const { colors, radii, shadows } = useTheme();
+  const currentCompany = useAuthStore((s) => s.currentCompany);
+  const currentEnvironment = useAuthStore((s) => s.currentEnvironment);
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -40,6 +43,13 @@ export default function ArchivedStocksScreen() {
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
 
   const fetchArchivedItems = useCallback(async () => {
+    if (!currentCompany || !currentEnvironment) {
+      setItems([]);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+
     try {
       const data = await getInventoryItems({ isArchived: true });
       setItems(data);
@@ -49,11 +59,13 @@ export default function ArchivedStocksScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [currentCompany, currentEnvironment]);
 
-  useEffect(() => {
-    fetchArchivedItems();
-  }, [fetchArchivedItems]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchArchivedItems();
+    }, [fetchArchivedItems]),
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);

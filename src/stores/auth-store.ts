@@ -17,10 +17,13 @@ import {
   arrayUnion,
   collection,
   doc,
+  getDoc,
   getDocs,
   getFirestore,
+  query,
   serverTimestamp,
   setDoc,
+  where,
   writeBatch,
 } from '@react-native-firebase/firestore';
 
@@ -99,7 +102,7 @@ async function loadCompaniesForUser(userId: string, userRef: any, companyIds: st
     const snaps = await Promise.all(
       uniqueCompanyIds.map(async (companyId) => {
         try {
-          return await doc(db, 'companies', companyId).get();
+          return await getDoc(doc(db, 'companies', companyId));
         } catch {
           return null;
         }
@@ -114,12 +117,13 @@ async function loadCompaniesForUser(userId: string, userRef: any, companyIds: st
   }
 
   try {
-    const rootSnap = await collection(db, 'companies').where('members', 'array-contains', userId).get();
+    const rootQuery = query(collection(db, 'companies'), where('members', 'array-contains', userId));
+    const rootSnap = await getDocs(rootQuery);
     rootSnap.docs.forEach((d: any) => {
       companiesById.set(d.id, normalizeCompany(d.id, d.data()));
     });
-  } catch {
-    // Ignore and fall back to the per-user index below.
+  } catch (e) {
+    console.warn('[loadCompaniesForUser] root query failed:', e);
   }
 
   try {
@@ -130,8 +134,8 @@ async function loadCompaniesForUser(userId: string, userRef: any, companyIds: st
         companiesById.set(company.id, company);
       }
     });
-  } catch {
-    // Ignore and keep whatever we loaded from the root collection.
+  } catch (e) {
+    console.warn('[loadCompaniesForUser] subcollection query failed:', e);
   }
 
   return Array.from(companiesById.values());
@@ -182,6 +186,7 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
           personalColor: '#1F8A5B',
           photoURL: fbUser.photoURL ?? null,
           phoneNumber: fbUser.phoneNumber ?? null,
+          createdCompanyIds: [],
           createdAt: Date.now(),
           updatedAt: Date.now(),
           deletedAt: null,
@@ -190,7 +195,7 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
         set({ status: 'loading', currentUser: immediateUser, authError: null });
 
         const userRef = doc(db, 'users', fbUser.uid);
-        const snap = await userRef.get();
+        const snap = await getDoc(userRef);
         const data = snap.data() ?? {};
         const user: User = {
           ...immediateUser,
@@ -200,14 +205,17 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
           photoURL: data.photoURL ?? immediateUser.photoURL,
           phoneNumber: data.phoneNumber ?? immediateUser.phoneNumber,
           companyIds: Array.isArray(data.companyIds) ? data.companyIds.filter((id: unknown): id is string => typeof id === 'string') : [],
+          createdCompanyIds: Array.isArray(data.createdCompanyIds) ? data.createdCompanyIds.filter((id: unknown): id is string => typeof id === 'string') : [],
           createdAt: data.createdAt?.toMillis() ?? Date.now(),
           updatedAt: data.updatedAt?.toMillis() ?? Date.now(),
           deletedAt: data.deletedAt?.toMillis() ?? null,
         };
 
         const companies = await loadCompaniesForUser(fbUser.uid, userRef, user.companyIds ?? []);
+        console.log('[initAuth] loaded', companies.length, 'companies for user', fbUser.uid, 'companyIds from doc:', user.companyIds);
 
-        if ((user.companyIds ?? []).length !== companies.length) {
+        if (companies.length > 0 && (user.companyIds ?? []).length !== companies.length) {
+          console.log('[initAuth] backfilling companyIds from', user.companyIds, 'to', companies.map((c) => c.id));
           try {
             await setDoc(
               userRef,
@@ -228,13 +236,16 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
 
         let environments: Environment[] = [];
         if (activeCompany) {
-          // Security rules require membership-based filtering when listing environments.
-          // Query only environments where the current user is a member to satisfy rules.
-          const envSnap = await doc(db, 'companies', activeCompany.id)
-            .collection('environments')
-            .where('members', 'array-contains', fbUser.uid)
-            .get();
-          environments = envSnap.docs.map((d) => normalizeEnvironment(activeCompany.id, d.id, d.data()));
+          try {
+            const envQuery = query(
+              collection(db, 'companies', activeCompany.id, 'environments'),
+              where('members', 'array-contains', fbUser.uid),
+            );
+            const envSnap = await getDocs(envQuery);
+            environments = envSnap.docs.map((d) => normalizeEnvironment(activeCompany.id, d.id, d.data()));
+          } catch (e) {
+            console.warn('[initAuth] environment query failed, continuing without environments:', e);
+          }
         }
 
         const savedEnvId = getActiveEnvironmentId();
@@ -249,6 +260,13 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
           authError: null,
           status: 'authenticated',
         });
+
+        if (activeCompanyId) {
+          setActiveCompanyId(activeCompanyId);
+        }
+        if (activeEnvironment) {
+          setActiveEnvironmentId(activeEnvironment.id);
+        }
       } catch (err) {
         // If the user is signed in but data fetch failed (eg. Firestore perms),
         // keep the session and surface an error instead of logging out.
@@ -286,6 +304,9 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
         GoogleSignin.configure({ webClientId: googleWebClientId });
         await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
       } catch {}
+      // Sign out of the native Google session first so the account picker is
+      // always shown instead of reusing the previously selected account.
+      try { await GoogleSignin.signOut(); } catch {}
       const signInResult: any = await GoogleSignin.signIn();
       // Support multiple return shapes across library versions
       let idToken: string | undefined = signInResult?.data?.idToken ?? signInResult?.idToken;
@@ -332,6 +353,7 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
         displayName,
         email,
         personalColor: '#1F8A5B',
+        createdCompanyIds: [],
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -365,7 +387,7 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
     const user = get().currentUser;
     if (!user) throw new Error('Not authenticated');
 
-    if (get().companies.length >= 3) {
+    if ((user.createdCompanyIds ?? []).length >= 3) {
       throw new Error('You can only create up to 3 companies');
     }
 
@@ -405,6 +427,7 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
         doc(db, 'users', user.uid),
         {
           companyIds: arrayUnion(companyId),
+          createdCompanyIds: arrayUnion(companyId),
           updatedAt: serverTimestamp(),
         },
         { merge: true },
@@ -454,6 +477,13 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
     set((state) => ({
       companies: [...state.companies, company],
       currentCompany: company,
+      currentUser: state.currentUser
+        ? {
+            ...state.currentUser,
+            companyIds: [...(state.currentUser.companyIds ?? []), companyId],
+            createdCompanyIds: [...(state.currentUser.createdCompanyIds ?? []), companyId],
+          }
+        : null,
       environments: [
         {
           id: 'development',
@@ -492,6 +522,7 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
     }));
 
     setActiveCompanyId(companyId);
+    setActiveEnvironmentId('development');
 
     return company;
   },
@@ -536,6 +567,20 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
       setDoc(doc(db, 'companies', companyId), payload, { merge: true }),
       setDoc(doc(db, 'users', user.uid, 'companies', companyId), payload, { merge: true }),
     ]);
+
+    try {
+      await Promise.all([
+        setDoc(doc(db, 'users', member, 'companies', companyId), payload, { merge: true }),
+        setDoc(
+          doc(db, 'users', member),
+          { companyIds: arrayUnion(companyId), updatedAt: serverTimestamp() },
+          { merge: true },
+        ),
+      ]);
+    } catch {
+      // Cross-user writes may be blocked by Firestore rules.
+      // The member's data will be backfilled on their next login via loadCompaniesForUser.
+    }
 
     set((state) => ({
       companies: state.companies.map((company) =>
@@ -596,11 +641,11 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
     if (!user) return;
     let environments: Environment[] = [];
     try {
-      // Match Firestore rules by filtering environments by membership.
-      const envSnap = await doc(db, 'companies', companyId)
-        .collection('environments')
-        .where('members', 'array-contains', user.uid)
-        .get();
+      const envQuery = query(
+        collection(db, 'companies', companyId, 'environments'),
+        where('members', 'array-contains', user.uid),
+      );
+      const envSnap = await getDocs(envQuery);
 
       environments = envSnap.docs.map((d) => normalizeEnvironment(companyId, d.id, d.data()));
     } catch {
@@ -614,6 +659,9 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
       currentEnvironment: environments[0] ?? null,
     });
     setActiveCompanyId(companyId);
+    if (environments[0]) {
+      setActiveEnvironmentId(environments[0].id);
+    }
   },
 
   switchEnvironment: async (environmentId) => {
@@ -626,7 +674,7 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
   refreshProfile: async () => {
     const user = get().currentUser;
     if (!user) return;
-    const snap = await doc(db, 'users', user.uid).get();
+    const snap = await getDoc(doc(db, 'users', user.uid));
     const data = snap.data() ?? {};
     set({
       currentUser: {

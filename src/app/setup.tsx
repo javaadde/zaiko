@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors, BorderRadius } from '@/constants/tokens';
@@ -6,16 +6,25 @@ import { useAuthStore } from '@/stores/auth-store';
 
 export default function SetupScreen() {
   const router = useRouter();
-  const { createCompany, status, companies } = useAuthStore();
+  const { createCompany, status, currentUser, companies } = useAuthStore();
   const [companyName, setCompanyName] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const { companies, currentCompany, status } = useAuthStore.getState();
+    console.log('[setup-guard] companies:', companies.length, 'company:', !!currentCompany, 'status:', status);
+    if (companies.length > 0 && status === 'authenticated') {
+      console.log('[setup-guard] redirecting to /(tabs)');
+      router.replace('/(tabs)' as never);
+    }
+  }, [companies, status, router]);
 
   const handleCreate = async () => {
     if (!companyName.trim()) {
       setError('Company name is required');
       return;
     }
-    if (companies.length >= 3) {
+    if ((currentUser?.createdCompanyIds ?? []).length >= 3) {
       setError('You can only create up to 3 companies');
       return;
     }

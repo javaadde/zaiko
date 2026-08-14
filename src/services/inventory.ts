@@ -3,6 +3,7 @@ import { tsToMs, serverTs } from '@/lib/firestore';
 import { uploadImageToCloudinary } from '@/lib/cloudinary';
 import type { InventoryItem } from '@/types';
 import type { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
+import { getActiveCompanyId, getActiveEnvironmentId } from '@/lib/mmkv';
 import { useAuthStore } from '@/stores/auth-store';
 import { collection, doc, getFirestore, increment } from '@react-native-firebase/firestore';
 
@@ -10,12 +11,13 @@ const firebaseApp = getApp();
 const db = getFirestore(firebaseApp);
 
 export function getEnvRef() {
-  const company = useAuthStore.getState().currentCompany;
-  const environment = useAuthStore.getState().currentEnvironment;
-  if (!company || !environment) {
+  const { currentCompany, currentEnvironment } = useAuthStore.getState();
+  const companyId = currentCompany?.id ?? getActiveCompanyId();
+  const environmentId = currentEnvironment?.id ?? getActiveEnvironmentId();
+  if (!companyId || !environmentId) {
     throw new Error('No active company or environment');
   }
-  return doc(db, 'companies', company.id, 'environments', environment.id);
+  return doc(db, 'companies', companyId, 'environments', environmentId);
 }
 
 export async function getInventoryItems(filters?: {
@@ -112,9 +114,13 @@ export async function getInventoryItem(id: string) {
 export async function createInventoryItem(item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>) {
   const envRef = getEnvRef();
   const user = useAuthStore.getState().currentUser;
+  const company = useAuthStore.getState().currentCompany;
+  const environment = useAuthStore.getState().currentEnvironment;
   const docRef = doc(collection(envRef, 'inventory'));
   await docRef.set({
     ...item,
+    companyId: company?.id ?? item.companyId,
+    environmentId: environment?.id ?? item.environmentId,
     id: docRef.id,
     createdAt: serverTs(),
     updatedAt: serverTs(),

@@ -29,12 +29,16 @@ export default function RootLayout() {
     const inAuthGroup = segments[0] === 'auth';
     const inSetupGroup = segments[0] === 'setup';
 
+    console.log('[nav-guard] status:', status, 'company:', !!currentCompany, 'segments:', segments);
+
     if (status !== 'authenticated' && !inAuthGroup) {
+      console.log('[nav-guard] redirecting to /auth');
       router.replace('/auth');
     } else if (status === 'authenticated' && !currentCompany && !inSetupGroup) {
+      console.log('[nav-guard] redirecting to /setup');
       router.replace('/setup');
-    } else if (status === 'authenticated' && currentCompany && inAuthGroup) {
-      // Allow navigating to setup even when a company exists (for creating another one)
+    } else if (status === 'authenticated' && currentCompany && (inAuthGroup || inSetupGroup)) {
+      console.log('[nav-guard] redirecting to /(tabs)');
       router.replace('/(tabs)');
     }
   }, [status, currentCompany, authLoading, fontsLoaded, segments, router]);
