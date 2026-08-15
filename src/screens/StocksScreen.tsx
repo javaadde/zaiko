@@ -8,7 +8,6 @@ import {
   StatusBar,
   TextInput,
   Image,
-  ActivityIndicator,
   RefreshControl,
   Alert,
   Modal,
@@ -17,10 +16,11 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { Smartphone, PackageOpen, Search, Filter } from 'lucide-react-native';
 import { useTheme } from '@/hooks/use-theme';
 import { getInventoryItems, deleteInventoryItem } from '@/services/inventory';
-import { brandCategories, brandPalette } from '@/data/brands';
+import { brandCategories } from '@/data/brands';
 import StockCard from '@/components/StockCard';
 import { useAuthStore } from '@/stores/auth-store';
 import type { InventoryItem } from '@/types';
+import BrandStatusScreen from '@/components/BrandStatusScreen';
 
 type FilterStatus = 'all' | 'in_stock' | 'low' | 'out_of_stock';
 
@@ -34,7 +34,7 @@ type CategoryIconProps = {
 };
 
 function CategoryIcon({ label, icon, active, onPress, isImage, bgColor }: CategoryIconProps) {
-  const { colors, radii, scheme } = useTheme();
+  const { colors, radii } = useTheme();
   return (
     <TouchableOpacity style={styles.catWrap} onPress={onPress}>
       <View
@@ -130,8 +130,14 @@ export default function StocksScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}> 
       <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} />
+      {loading ? (
+        <BrandStatusScreen
+          title="Zaiko"
+          subtitle="Loading inventory"
+        />
+      ) : (
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
@@ -191,14 +197,9 @@ export default function StocksScreen() {
           ))}
         </ScrollView>
 
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={[styles.loadingText, { color: colors.textMuted }]}>Loading inventory...</Text>
-          </View>
-        ) : items.length === 0 ? (
+        {items.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <View style={[styles.emptyIconBox, { backgroundColor: colors.bgCard }]}>
+            <View style={[styles.emptyIconBox, { backgroundColor: colors.bgCard }]}> 
               <PackageOpen size={56} color={colors.textMuted} strokeWidth={1.5} />
             </View>
             <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No items found</Text>
@@ -225,6 +226,7 @@ export default function StocksScreen() {
 
         <View style={{ height: 120 }} />
       </ScrollView>
+      )}
 
       <Modal
         visible={isFilterVisible}

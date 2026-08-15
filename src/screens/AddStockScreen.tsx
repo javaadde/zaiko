@@ -6,7 +6,6 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  Animated,
   StatusBar,
   KeyboardAvoidingView,
   Platform,
@@ -23,6 +22,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { useAuthStore } from '@/stores/auth-store';
 import { getInventoryItem, createInventoryItem, updateInventoryItem, uploadInventoryImage } from '@/services/inventory';
 import { playSuccessSound } from '@/lib/play-success-sound';
+import BrandStatusScreen from '@/components/BrandStatusScreen';
 
 const BRANDS = [
   { name: 'Apple', logo: require('../../assets/logos/apple.png') },
@@ -49,8 +49,8 @@ export default function AddStockScreen() {
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const successAnim = useRef(new Animated.Value(0)).current;
+  const [submitPhase, setSubmitPhase] = useState<'idle' | 'saving' | 'success'>('idle');
+  const successTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [model, setModel] = useState('');
   const [brand, setBrand] = useState('');
@@ -69,6 +69,14 @@ export default function AddStockScreen() {
   const [showPricingRules, setShowPricingRules] = useState(false);
   const [imei, setImei] = useState('');
   const [color, setColor] = useState('');
+
+  useEffect(() => {
+    return () => {
+      if (successTimer.current) {
+        clearTimeout(successTimer.current);
+      }
+    };
+  }, []);
 
   const resetForm = useCallback(() => {
     setModel('');
@@ -235,7 +243,7 @@ export default function AddStockScreen() {
     }
 
     setLoading(true);
-    setIsSuccess(false);
+    setSubmitPhase('saving');
 
     try {
       const upload = await uploadImageIfNeeded();
@@ -266,36 +274,30 @@ export default function AddStockScreen() {
         await createInventoryItem(itemData);
       }
 
-      setLoading(false);
-      setIsSuccess(true);
-
       await playSuccessSound();
 
-      Animated.timing(successAnim, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }).start(() => {
-        setTimeout(() => {
-          Animated.timing(successAnim, {
-            toValue: 0,
-            duration: 300,
-            useNativeDriver: true,
-          }).start();
-          if (isEditing) {
-            router.back();
-          } else {
-            resetForm();
-            setIsSuccess(false);
-          }
-        }, 1200);
-      });
-    } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to save item.');
-    } finally {
-      if (!isSuccess) {
-        setLoading(false);
+      setLoading(false);
+      setSubmitPhase('success');
+
+      if (successTimer.current) {
+        clearTimeout(successTimer.current);
       }
+
+      successTimer.current = setTimeout(() => {
+        if (isEditing) {
+          router.back();
+          return;
+        }
+
+        if (!isEditing) {
+          resetForm();
+          setSubmitPhase('idle');
+        }
+      }, 1400);
+    } catch (error) {
+      setLoading(false);
+      setSubmitPhase('idle');
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to save item.');
     }
   };
 
@@ -603,6 +605,20 @@ export default function AddStockScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <Modal visible={submitPhase !== 'idle'} transparent animationType="fade" statusBarTranslucent>
+        <BrandStatusScreen
+          variant={submitPhase === 'success' ? 'success' : 'loading'}
+          title={submitPhase === 'success' ? 'Saved' : 'Zaiko'}
+          subtitle={
+            submitPhase === 'success'
+              ? 'Added to inventory successfully'
+              : isEditing
+                ? 'Updating item in inventory'
+                : 'Adding item to inventory'
+          }
+        />
+      </Modal>
 
       {/* Brand Selection Modal */}
       <Modal visible={showBrandModal} transparent animationType="fade" onRequestClose={() => setShowBrandModal(false)}>

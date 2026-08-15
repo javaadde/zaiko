@@ -1,16 +1,14 @@
-import { tsToMs, serverTs } from '@/lib/firestore';
+import { tsToMs, tsToMsOrNull, serverTs } from '@/lib/firestore';
 import type { Sale } from '@/types';
 import { useAuthStore } from '@/stores/auth-store';
-import { getDocs } from '@react-native-firebase/firestore';
+import { addDoc, collection, getDocs, orderBy, query } from '@react-native-firebase/firestore';
 import { getEnvRef } from './inventory';
 
 export async function createSale(sale: Omit<Sale, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>) {
   const envRef = getEnvRef();
   const user = useAuthStore.getState().currentUser;
-  const docRef = envRef.collection('sales').doc();
-  await docRef.set({
+  const docRef = await addDoc(collection(envRef, 'sales'), {
     ...sale,
-    id: docRef.id,
     createdAt: serverTs(),
     updatedAt: serverTs(),
     createdBy: user?.uid ?? sale.createdBy,
@@ -23,7 +21,7 @@ export async function getSales() {
   if (!currentCompany || !currentEnvironment) {
     return [];
   }
-  const snap = await getDocs(getEnvRef().collection('sales').orderBy('saleDate', 'desc'));
+  const snap = await getDocs(query(collection(getEnvRef(), 'sales'), orderBy('saleDate', 'desc')));
   return snap.docs.map((d) => {
     const data = d.data();
     return {
@@ -41,7 +39,7 @@ export async function getSales() {
       createdBy: data.createdBy ?? '',
       createdAt: tsToMs(data.createdAt),
       updatedAt: tsToMs(data.updatedAt),
-      deletedAt: data.deletedAt?.toMillis() ?? null,
+      deletedAt: tsToMsOrNull(data.deletedAt),
     } satisfies Sale;
   });
 }

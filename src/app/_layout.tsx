@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts, PlayfairDisplay_600SemiBold_Italic } from '@expo-google-fonts/playfair-display';
 import { ThemeProvider } from '@/providers/theme-context';
 import { useAuthStore } from '@/stores/auth-store';
+import BrandStatusScreen from '@/components/BrandStatusScreen';
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -47,7 +48,7 @@ export default function RootLayout() {
     return (
       <GestureHandlerRootView style={styles.root}>
         <ThemeProvider>
-          <View style={styles.root} />
+          <BrandStatusScreen title="Zaiko" subtitle="Loading your workspace" />
         </ThemeProvider>
       </GestureHandlerRootView>
     );

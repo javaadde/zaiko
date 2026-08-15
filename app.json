@@ -10,6 +10,11 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#5EEA9A",
+      "image": "./assets/icon.png",
+      "resizeMode": "contain"
+    },
     "android": {
       "package": "zaiko.space",
       "googleServicesFile": "./google-services.json",

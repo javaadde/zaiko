@@ -86,19 +86,17 @@ const styles = StyleSheet.create({
   card: {
     width: CARD_WIDTH,
     borderRadius: 28,
-    padding: 12,
     marginHorizontal: 6,
     marginVertical: 8,
     borderWidth: 1,
+    overflow: 'hidden',
   },
   imageContainer: {
     width: '100%',
     height: 160,
-    borderRadius: 22,
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
   },
   image: {
     width: '100%',
@@ -140,7 +138,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    paddingHorizontal: 2,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
   },
   textContainer: {
     flex: 1,

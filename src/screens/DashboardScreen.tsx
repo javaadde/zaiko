@@ -158,20 +158,31 @@ export default function DashboardScreen({ onTabChange }: Props) {
   const fetchData = useCallback(async () => {
     if (!currentCompany || !currentEnvironment) {
       setStats(null);
+      setSales([]);
       setLoading(false);
       setRefreshing(false);
       return;
     }
 
     try {
-      const [statsData, salesData] = await Promise.all([
+      const [statsResult, salesResult] = await Promise.allSettled([
         getInventoryStats(),
         getSales(),
       ]);
-      setStats(statsData as Stats);
-      setSales(salesData.slice(0, 5));
-    } catch (error) {
-      console.warn('Failed to fetch dashboard data:', error);
+
+      if (statsResult.status === 'fulfilled') {
+        setStats(statsResult.value as Stats);
+      } else {
+        console.warn('Failed to fetch dashboard inventory stats:', statsResult.reason);
+        setStats(null);
+      }
+
+      if (salesResult.status === 'fulfilled') {
+        setSales(salesResult.value.slice(0, 5));
+      } else {
+        console.warn('Failed to fetch dashboard sales:', salesResult.reason);
+        setSales([]);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -634,4 +645,3 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
-

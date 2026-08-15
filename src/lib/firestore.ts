@@ -2,10 +2,24 @@ import { Timestamp, serverTimestamp } from '@react-native-firebase/firestore';
 import type { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 import type { TimestampMs } from '@/types';
 
+type TimestampLike =
+  | FirebaseFirestoreTypes.Timestamp
+  | { toMillis: () => number }
+  | number
+  | null
+  | undefined;
+
 export function tsToMs(
-  val: FirebaseFirestoreTypes.Timestamp | null | undefined,
+  val: TimestampLike,
 ): TimestampMs {
+  if (typeof val === 'number') return val;
   return val?.toMillis() ?? Date.now();
+}
+
+export function tsToMsOrNull(val: TimestampLike): TimestampMs | null {
+  if (val == null) return null;
+  if (typeof val === 'number') return val;
+  return val.toMillis();
 }
 
 export function msToTs(ms: TimestampMs): FirebaseFirestoreTypes.Timestamp {

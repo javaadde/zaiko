@@ -1,11 +1,22 @@
 import { getApp } from '@react-native-firebase/app';
-import { tsToMs, serverTs } from '@/lib/firestore';
+import { tsToMs, tsToMsOrNull, serverTs } from '@/lib/firestore';
 import { uploadImageToCloudinary } from '@/lib/cloudinary';
 import type { InventoryItem } from '@/types';
 import type { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 import { getActiveCompanyId, getActiveEnvironmentId } from '@/lib/mmkv';
 import { useAuthStore } from '@/stores/auth-store';
-import { collection, doc, getFirestore, increment } from '@react-native-firebase/firestore';
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  getFirestore,
+  increment,
+  query,
+  updateDoc,
+  where,
+} from '@react-native-firebase/firestore';
 
 const firebaseApp = getApp();
 const db = getFirestore(firebaseApp);
@@ -27,19 +38,19 @@ export async function getInventoryItems(filters?: {
   isArchived?: boolean;
 }) {
   const envRef = getEnvRef();
-  let query: FirebaseFirestoreTypes.Query = envRef.collection('inventory');
+  const inventoryRef = collection(envRef, 'inventory');
+  let q: FirebaseFirestoreTypes.Query = query(inventoryRef);
+  const isArchived = filters?.isArchived ?? false;
 
   if (filters?.brand) {
-    query = query.where('brand', '==', filters.brand);
+    q = query(q, where('brand', '==', filters.brand));
   }
   if (filters?.status) {
-    query = query.where('status', '==', filters.status);
+    q = query(q, where('status', '==', filters.status));
   }
-  if (filters?.isArchived !== undefined) {
-    query = query.where('isArchived', '==', filters.isArchived);
-  }
+  q = query(q, where('isArchived', '==', isArchived));
 
-  const snap = await query.get();
+  const snap = await getDocs(q);
   let items: InventoryItem[] = snap.docs.map((d) => {
     const data = d.data();
     return {
@@ -55,7 +66,7 @@ export async function getInventoryItems(filters?: {
       minWholesalePrice: data.minWholesalePrice ?? null,
       minRetailPrice: data.minRetailPrice ?? null,
       supplier: data.supplier ?? null,
-      purchaseDate: data.purchaseDate?.toMillis() ?? null,
+      purchaseDate: tsToMsOrNull(data.purchaseDate),
       status: data.status ?? 'in_stock',
       color: data.color ?? null,
       imageUrl: data.imageUrl ?? null,
@@ -64,7 +75,7 @@ export async function getInventoryItems(filters?: {
       createdBy: data.createdBy ?? '',
       createdAt: tsToMs(data.createdAt),
       updatedAt: tsToMs(data.updatedAt),
-      deletedAt: data.deletedAt?.toMillis() ?? null,
+      deletedAt: tsToMsOrNull(data.deletedAt),
     };
   });
 
@@ -82,7 +93,7 @@ export async function getInventoryItems(filters?: {
 }
 
 export async function getInventoryItem(id: string) {
-  const snap = await getEnvRef().collection('inventory').doc(id).get();
+  const snap = await getDoc(doc(collection(getEnvRef(), 'inventory'), id));
   if (!snap.exists) throw new Error('Item not found');
   const data = snap.data()!;
   return {
@@ -98,7 +109,7 @@ export async function getInventoryItem(id: string) {
     minWholesalePrice: data.minWholesalePrice ?? null,
     minRetailPrice: data.minRetailPrice ?? null,
     supplier: data.supplier ?? null,
-    purchaseDate: data.purchaseDate?.toMillis() ?? null,
+    purchaseDate: tsToMsOrNull(data.purchaseDate),
     status: data.status ?? 'in_stock',
     color: data.color ?? null,
     imageUrl: data.imageUrl ?? null,
@@ -107,7 +118,7 @@ export async function getInventoryItem(id: string) {
     createdBy: data.createdBy ?? '',
     createdAt: tsToMs(data.createdAt),
     updatedAt: tsToMs(data.updatedAt),
-    deletedAt: data.deletedAt?.toMillis() ?? null,
+    deletedAt: tsToMsOrNull(data.deletedAt),
   } satisfies InventoryItem;
 }
 
@@ -116,12 +127,10 @@ export async function createInventoryItem(item: Omit<InventoryItem, 'id' | 'crea
   const user = useAuthStore.getState().currentUser;
   const company = useAuthStore.getState().currentCompany;
   const environment = useAuthStore.getState().currentEnvironment;
-  const docRef = doc(collection(envRef, 'inventory'));
-  await docRef.set({
+  const docRef = await addDoc(collection(envRef, 'inventory'), {
     ...item,
     companyId: company?.id ?? item.companyId,
     environmentId: environment?.id ?? item.environmentId,
-    id: docRef.id,
     createdAt: serverTs(),
     updatedAt: serverTs(),
     createdBy: user?.uid ?? '',
@@ -133,28 +142,28 @@ export async function updateInventoryItem(
   id: string,
   updates: Partial<Omit<InventoryItem, 'id' | 'createdAt' | 'createdBy' | 'deletedAt'>>,
 ) {
-  await doc(collection(getEnvRef(), 'inventory'), id).update({
+  await updateDoc(doc(collection(getEnvRef(), 'inventory'), id), {
     ...updates,
     updatedAt: serverTs(),
   });
 }
 
 export async function deleteInventoryItem(id: string) {
-  await doc(collection(getEnvRef(), 'inventory'), id).update({
+  await updateDoc(doc(collection(getEnvRef(), 'inventory'), id), {
     deletedAt: serverTs(),
     updatedAt: serverTs(),
   });
 }
 
 export async function archiveInventoryItem(id: string) {
-  await doc(collection(getEnvRef(), 'inventory'), id).update({
+  await updateDoc(doc(collection(getEnvRef(), 'inventory'), id), {
     isArchived: true,
     updatedAt: serverTs(),
   });
 }
 
 export async function unarchiveInventoryItem(id: string) {
-  await doc(collection(getEnvRef(), 'inventory'), id).update({
+  await updateDoc(doc(collection(getEnvRef(), 'inventory'), id), {
     isArchived: false,
     updatedAt: serverTs(),
   });
@@ -191,11 +200,11 @@ export async function getInventoryStats() {
 export async function restockItem(id: string, quantity: number) {
   const envRef = getEnvRef();
   const docRef = doc(collection(envRef, 'inventory'), id);
-  await docRef.update({
+  await updateDoc(docRef, {
     quantity: increment(quantity),
     updatedAt: serverTs(),
   });
-  const snap = await docRef.get();
+  const snap = await getDoc(docRef);
   if (!snap.exists) throw new Error('Item not found');
   const data = snap.data()!;
   return {
@@ -211,7 +220,7 @@ export async function restockItem(id: string, quantity: number) {
     minWholesalePrice: data.minWholesalePrice ?? null,
     minRetailPrice: data.minRetailPrice ?? null,
     supplier: data.supplier ?? null,
-    purchaseDate: data.purchaseDate?.toMillis() ?? null,
+    purchaseDate: tsToMsOrNull(data.purchaseDate),
     status: data.status ?? 'in_stock',
     color: data.color ?? null,
     imageUrl: data.imageUrl ?? null,
@@ -220,6 +229,6 @@ export async function restockItem(id: string, quantity: number) {
     createdBy: data.createdBy ?? '',
     createdAt: tsToMs(data.createdAt),
     updatedAt: tsToMs(data.updatedAt),
-    deletedAt: data.deletedAt?.toMillis() ?? null,
+    deletedAt: tsToMsOrNull(data.deletedAt),
   } satisfies InventoryItem;
 }
