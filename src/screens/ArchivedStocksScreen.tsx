@@ -22,7 +22,6 @@ import {
   Package,
   X,
 } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTheme } from '@/hooks/use-theme';
 import { getInventoryItems, unarchiveInventoryItem, deleteInventoryItem } from '@/services/inventory';
