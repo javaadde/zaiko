@@ -212,10 +212,8 @@ export const useAuthStore = create<AuthState & AuthActions>()((set, get) => ({
         };
 
         const companies = await loadCompaniesForUser(fbUser.uid, userRef, user.companyIds ?? []);
-        console.log('[initAuth] loaded', companies.length, 'companies for user', fbUser.uid, 'companyIds from doc:', user.companyIds);
 
         if (companies.length > 0 && (user.companyIds ?? []).length !== companies.length) {
-          console.log('[initAuth] backfilling companyIds from', user.companyIds, 'to', companies.map((c) => c.id));
           try {
             await setDoc(
               userRef,
