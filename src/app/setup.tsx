@@ -12,9 +12,7 @@ export default function SetupScreen() {
 
   useEffect(() => {
     const { companies, currentCompany, status } = useAuthStore.getState();
-    console.log('[setup-guard] companies:', companies.length, 'company:', !!currentCompany, 'status:', status);
     if (companies.length > 0 && status === 'authenticated') {
-      console.log('[setup-guard] redirecting to /(tabs)');
       router.replace('/(tabs)' as never);
     }
   }, [companies, status, router]);
