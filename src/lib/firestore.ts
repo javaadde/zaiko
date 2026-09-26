@@ -27,5 +27,5 @@ export function msToTs(ms: TimestampMs): FirebaseFirestoreTypes.Timestamp {
 }
 
 export function serverTs(): FirebaseFirestoreTypes.Timestamp {
-  return serverTimestamp() as FirebaseFirestoreTypes.Timestamp;
+  return serverTimestamp() as unknown as FirebaseFirestoreTypes.Timestamp;
 }

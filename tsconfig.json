@@ -7,7 +7,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@/assets/*": ["./assets/*"]
-    }
+    },
+    "types": ["jest"]
   },
   "include": [
     "**/*.ts",
