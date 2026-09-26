@@ -178,11 +178,14 @@ export async function uploadInventoryImage(asset: { uri: string; mimeType?: stri
 
 export async function getInventoryStats() {
   const items = await getInventoryItems();
-  const totalQuantity = items.reduce((sum, i) => sum + i.quantity, 0);
-  const totalPurchase = items.reduce((sum, i) => sum + i.purchasePrice * i.quantity, 0);
-  const totalSelling = items.reduce((sum, i) => sum + i.sellingPrice * i.quantity, 0);
+  let totalQuantity = 0;
+  let totalPurchase = 0;
+  let totalSelling = 0;
   const brandDistribution = new Map<string, { _id: string; totalQuantity: number }>();
   for (const item of items) {
+    totalQuantity += item.quantity;
+    totalPurchase += item.purchasePrice * item.quantity;
+    totalSelling += item.sellingPrice * item.quantity;
     const current = brandDistribution.get(item.brand) ?? { _id: item.brand, totalQuantity: 0 };
     current.totalQuantity += item.quantity;
     brandDistribution.set(item.brand, current);
