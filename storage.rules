@@ -17,8 +17,8 @@ service firebase.storage {
       allow read, write: if isCompanyMember(companyId);
     }
 
-    match /inventory/{allPaths=**} {
-      allow read, write: if isSignedIn();
+    match /inventory/{companyId}/{allPaths=**} {
+      allow read, write: if isCompanyMember(companyId);
     }
 
     match /{allPaths=**} {
