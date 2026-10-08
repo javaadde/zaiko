@@ -17,6 +17,7 @@ import {
   arrayUnion,
   collection,
   doc,
+  documentId,
   getDoc,
   getDocs,
   getFirestore,
@@ -99,20 +100,26 @@ async function loadCompaniesForUser(userId: string, userRef: any, companyIds: st
   const uniqueCompanyIds = Array.from(new Set(companyIds.filter((id): id is string => typeof id === 'string' && id.length > 0)));
 
   if (uniqueCompanyIds.length > 0) {
-    const snaps = await Promise.all(
-      uniqueCompanyIds.map(async (companyId) => {
+    const chunks: string[][] = [];
+    for (let i = 0; i < uniqueCompanyIds.length; i += 10) {
+      chunks.push(uniqueCompanyIds.slice(i, i + 10));
+    }
+
+    const chunkResults = await Promise.all(
+      chunks.map(async (chunk) => {
         try {
-          return await getDoc(doc(db, 'companies', companyId));
-        } catch {
-          return null;
+          const q = query(collection(db, 'companies'), where(documentId(), 'in', chunk));
+          const snap = await getDocs(q);
+          return snap.docs;
+        } catch (e) {
+          console.warn('[loadCompaniesForUser] chunk query failed:', e);
+          return [];
         }
-      }),
+      })
     );
 
-    snaps.forEach((snap) => {
-      if (snap?.exists) {
-        companiesById.set(snap.id, normalizeCompany(snap.id, snap.data()));
-      }
+    chunkResults.flat().forEach((docSnap) => {
+      companiesById.set(docSnap.id, normalizeCompany(docSnap.id, docSnap.data()));
     });
   }
 
