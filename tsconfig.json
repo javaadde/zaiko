@@ -1,6 +1,7 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
+    "types": ["jest"],
     "strict": true,
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
@@ -10,6 +11,7 @@
     }
   },
   "include": [
+    "**/*.test.ts",
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
